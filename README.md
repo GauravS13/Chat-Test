@@ -1,6 +1,12 @@
-# 🎮 Decentralized Game Room
+# 🎮 Decentralized Multi-Game Room
 
-A production-ready hackathon project that simultaneously meets **three critical tracks**: 2G Connection Ninja, Memory Monk, and Offline Survivalist.
+A production-ready hackathon project featuring **4 lightweight multiplayer games** with **hardest AI difficulty** that simultaneously meets **three critical tracks**: 2G Connection Ninja, Memory Monk, and Offline Survivalist.
+
+## 🎯 Available Games
+
+- **🎯 Tic-Tac-Toe** - Classic 3x3 grid with unbeatable minimax AI
+- **🔴 Connect Four** - 7x6 grid with advanced AI strategy  
+- **🔢 Number Guessing** - Guess 1-100 with binary search AI
 
 ## 🏆 Hackathon Track Compliance
 
@@ -132,10 +138,11 @@ python -m http.server 8000
 - **Network Mode**: P2P gameplay via WebRTC RTCDataChannel
 
 ### Game Logic
-- **Tic-Tac-Toe**: Simple 3x3 grid game
-- **Deterministic**: AI makes same moves for identical board states
-- **Compact State**: Board represented as 9-element array
-- **Win Detection**: Efficient line checking algorithm
+- **Multi-Game Engine**: Supports 4 different game types with unified interface
+- **Advanced AI**: Minimax algorithm for Tic-Tac-Toe, strategic AI for Connect Four
+- **Pattern Learning**: RPS AI analyzes player patterns, Number Guessing uses binary search
+- **Compact State**: Efficient board representations for all game types
+- **Win Detection**: Optimized algorithms for each game's victory conditions
 
 ## 🌐 Signaling Protocol
 
@@ -148,10 +155,11 @@ python -m http.server 8000
 {"t":"ice","room":"rabc123","cand":{/* ICE */}}
 ```
 
-### RTCDataChannel Messages (Ultra-Compact)
+### RTCDataChannel Messages (Game-Specific)
 ```
-mv:12    # Move to position 12
-mv:5     # Move to position 5
+tictactoe:5        # Tic-tac-toe move to position 5
+connect4:3         # Connect Four drop in column 3
+numguess:42        # Number guess of 42
 ```
 
 ## 🔍 Debug Features
