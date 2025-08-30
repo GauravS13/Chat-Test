@@ -1,228 +1,2587 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Decentralized Game Room</title>
-    <meta
-      name="description"
-      content="P2P games (Tic-Tac-Toe, Connect Four, Number Guessing)"
-    />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div class="app">
-      <header class="site-header" role="banner">
-        <div class="container">
-          <h1 id="appTitle">🎮 Decentralized Game Room</h1>
-          <p class="lead">P2P games with offline-first support</p>
+    <style>
+        /* Modern CSS Reset */
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        /* CSS Custom Properties for consistent theming */
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #5b5cf6;
+            --secondary-color: #10b981;
+            --secondary-hover: #059669;
+            --accent-color: #f59e0b;
+            --accent-hover: #d97706;
+            --danger-color: #ef4444;
+            --danger-hover: #dc2626;
+            --background-primary: #0f172a;
+            --background-secondary: #1e293b;
+            --background-tertiary: #334155;
+            --surface-primary: #1e293b;
+            --surface-secondary: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --border-color: #475569;
+            --border-hover: #64748b;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --radius-xl: 1rem;
+        }
+        
+        /* Base Styles */
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, var(--background-primary) 0%, #1a202c 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Container */
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: clamp(1rem, 4vw, 2rem);
+            padding-top: clamp(4rem, 8vw, 6rem);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        /* Header */
+        .header { 
+            text-align: center; 
+            margin-bottom: clamp(2rem, 5vw, 3rem);
+            padding: clamp(1.5rem, 4vw, 2rem) clamp(1rem, 3vw, 2rem);
+            background: var(--surface-primary);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+        }
+        
+        .header h1 { 
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color), var(--accent-color));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+        
+        .header p {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        /* Lobby */
+        .lobby { 
+            text-align: center; 
+            margin-bottom: clamp(1.5rem, 4vw, 2rem);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 60vh;
+        }
+        
+        .lobby h2 {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            font-weight: 700;
+            margin-bottom: clamp(1.5rem, 4vw, 2rem);
+            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        /* Buttons */
+        .btn { 
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: clamp(0.75rem, 2vw, 1rem) clamp(1.5rem, 4vw, 2rem);
+            margin: clamp(0.375rem, 1vw, 0.5rem);
+            border-radius: var(--radius-lg);
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: min(200px, 80vw);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:hover { 
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn:disabled { 
+            background: var(--background-tertiary);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn.offline { 
+            background: var(--accent-color);
+        }
+        
+        .btn.offline:hover { 
+            background: var(--accent-hover);
+        }
+        
+        .btn.back-btn { 
+            background: var(--background-tertiary);
+            margin-top: 1.5rem;
+        }
+        
+        .btn.back-btn:hover { 
+            background: var(--surface-secondary);
+        }
+        
+        /* Game Selection Grid */
+        .game-selection { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); 
+            gap: clamp(1rem, 3vw, 1.5rem); 
+            margin: clamp(1.5rem, 4vw, 2rem) 0;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+        }
+        
+        .game-btn { 
+            font-size: clamp(1rem, 3vw, 1.25rem); 
+            padding: clamp(1.5rem, 4vw, 2rem); 
+            min-height: clamp(100px, 15vw, 120px);
+            background: var(--surface-primary);
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            touch-action: manipulation;
+        }
+        
+        .game-btn:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-hover);
+            color: white;
+        }
+        
+        /* Game Boards */
+        .game-board { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr);
+            gap: clamp(0.5rem, 2vw, 0.75rem); 
+            max-width: min(360px, 90vw); 
+            margin: clamp(1.5rem, 4vw, 2rem) auto;
+            padding: clamp(1rem, 3vw, 1.5rem);
+            background: var(--surface-primary);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            aspect-ratio: 1;
+        }
+        
+        .cell { 
+            width: 100%; 
+            aspect-ratio: 1; 
+            background: var(--surface-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-size: clamp(1.5rem, 6vw, 2.5rem); 
+            font-weight: bold; 
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            touch-action: manipulation;
+            min-height: 60px;
+        }
+        
+        .cell::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--primary-color);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .cell:hover::before {
+            opacity: 0.1;
+        }
+        
+        .cell:hover { 
+            border-color: var(--primary-color);
+            transform: scale(1.05);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .cell.x { 
+            color: var(--danger-color);
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        .cell.o { 
+            color: var(--secondary-color);
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        /* Connect Four Board */
+        .connect4-board {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: clamp(0.25rem, 1vw, 0.5rem);
+            max-width: min(500px, 95vw);
+            margin: clamp(1.5rem, 4vw, 2rem) auto;
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            padding: clamp(1rem, 3vw, 1.5rem);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            width: 100%;
+            aspect-ratio: 7/6;
+        }
+        
+        .connect4-cell {
+            width: 100%;
+            aspect-ratio: 1;
+            background: var(--surface-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 3px solid transparent;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+            touch-action: manipulation;
+            min-width: 30px;
+            min-height: 30px;
+        }
+        
+        .connect4-cell:hover { 
+            background: var(--surface-secondary);
+            transform: scale(1.1);
+            border-color: var(--primary-color);
+        }
+        
+        .connect4-cell.red { 
+            background: linear-gradient(135deg, var(--danger-color), #dc2626);
+            box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+        }
+        
+        .connect4-cell.yellow { 
+            background: linear-gradient(135deg, var(--accent-color), #d97706);
+            box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+        }
+        
+        /* Number Guessing */
+        .numguess-input {
+            padding: clamp(0.75rem, 2vw, 1rem);
+            margin: clamp(0.75rem, 2vw, 1rem);
+            font-size: clamp(1rem, 3vw, 1.25rem);
+            border-radius: var(--radius-lg);
+            border: 2px solid var(--border-color);
+            background: var(--surface-primary);
+            color: var(--text-primary);
+            text-align: center;
+            width: min(200px, 80vw);
+            max-width: 100%;
+            transition: all 0.3s;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .numguess-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        /* Game Info */
+        .game-info {
+            background: var(--surface-primary);
+            padding: clamp(1rem, 3vw, 1.5rem);
+            border-radius: var(--radius-xl);
+            margin: clamp(1.5rem, 4vw, 2rem) auto;
+            text-align: center;
+            max-width: min(600px, 95vw);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            width: 100%;
+        }
+        
+        .score-display {
+            font-size: clamp(1.125rem, 3vw, 1.5rem);
+            font-weight: 600;
+            margin: 1rem 0;
+            padding: clamp(0.75rem, 2vw, 1rem);
+            background: var(--surface-secondary);
+            border-radius: var(--radius-lg);
+            color: var(--text-primary);
+        }
+        
+        /* Status Messages */
+        .status { 
+            padding: clamp(0.75rem, 2vw, 1rem); 
+            margin: clamp(0.75rem, 2vw, 1rem) 0; 
+            border-radius: var(--radius-lg);
+            font-weight: 600;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+        }
+        
+        .status.waiting { 
+            background: rgba(245, 158, 11, 0.2); 
+            color: var(--accent-color);
+            border: 1px solid var(--accent-color);
+        }
+        
+        .status.connected { 
+            background: rgba(16, 185, 129, 0.2); 
+            color: var(--secondary-color);
+            border: 1px solid var(--secondary-color);
+        }
+        
+        .status.error { 
+            background: rgba(239, 68, 68, 0.2); 
+            color: var(--danger-color);
+            border: 1px solid var(--danger-color);
+        }
+        
+        .status.offline { 
+            background: rgba(148, 163, 184, 0.2); 
+            color: var(--text-muted);
+            border: 1px solid var(--text-muted);
+        }
+        
+        .status.info { 
+            background: rgba(99, 102, 241, 0.2); 
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+        
+        /* Loader */
+        .loader {
+            border: 3px solid var(--surface-secondary);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-left: 0.75rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Game Over Actions */
+        .game-over-actions {
+            text-align: center;
+            margin-top: clamp(1.5rem, 4vw, 2rem);
+            padding: clamp(1rem, 3vw, 1.5rem);
+            background: var(--surface-primary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        /* Debug Panel */
+        .debug-panel { 
+            position: fixed; 
+            top: 0.5rem; 
+            right: 0.5rem;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(8px);
+            padding: 0.4rem 0.6rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            width: 160px;
+            box-shadow: var(--shadow-md);
+            z-index: 1000;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+        
+        .debug-panel:hover {
+            opacity: 1;
+        }
+        
+        .debug-panel h3 { 
+            color: var(--primary-color);
+            margin-bottom: 0.3rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .debug-item { 
+            margin: 0.2rem 0;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.6rem;
+            line-height: 1.1;
+        }
+        
+        .debug-item strong { 
+            color: var(--text-primary);
+            font-size: 0.55rem;
+            max-width: 50%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: var(--surface-primary);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--border-color);
+            max-width: min(600px, 95vw);
+            max-height: 90vh;
+            width: 100%;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .modal-overlay.active .modal-content {
+            transform: scale(1) translateY(0);
+        }
+        
+        .modal-header {
+            padding: clamp(1.5rem, 4vw, 2rem);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .modal-header h3 {
+            font-size: clamp(1.25rem, 3vw, 1.5rem);
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: var(--radius-md);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+        
+        .modal-close:hover {
+            background: var(--surface-secondary);
+            color: var(--text-primary);
+        }
+        
+        .modal-body {
+            padding: clamp(1.5rem, 4vw, 2rem);
+        }
+        
+        .manual-handshake { 
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
+            margin: 0;
+            border: none;
+            box-shadow: none;
+            max-width: 100%;
+            overflow-x: auto;
+        }
+        
+        .manual-handshake h4 { 
+            color: var(--primary-color);
+            margin-bottom: clamp(0.75rem, 2vw, 1rem);
+            font-size: clamp(1rem, 2.5vw, 1.125rem);
+            font-weight: 600;
+        }
+        
+        .manual-handshake p { 
+            margin: clamp(0.375rem, 1vw, 0.5rem) 0;
+            color: var(--text-secondary);
+            font-size: clamp(0.875rem, 2vw, 1rem);
+            line-height: 1.5;
+        }
+        
+        .manual-handshake textarea {
+            width: 100%;
+            min-height: clamp(100px, 15vw, 120px);
+            background: var(--background-primary);
+            color: var(--primary-color);
+            border: 1px solid var(--border-color);
+            padding: clamp(0.75rem, 2vw, 1rem);
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            margin: clamp(0.75rem, 2vw, 1rem) 0;
+            border-radius: var(--radius-md);
+            resize: vertical;
+            transition: border-color 0.3s;
+            font-size: clamp(0.8rem, 2vw, 0.9rem);
+            line-height: 1.4;
+        }
+        
+        .manual-handshake textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        /* Utility Classes */
+        .hidden { 
+            display: none !important; 
+        }
+        
+        /* Smooth transitions for better UX */
+        * {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Focus styles for accessibility */
+        .btn:focus-visible,
+        .cell:focus-visible,
+        .connect4-cell:focus-visible,
+        .game-btn:focus-visible {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+        
+        /* Loading states */
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        /* Better scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--surface-secondary);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-hover);
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-color);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: var(--radius-lg);
+            font-weight: 600;
+            border: 1px solid var(--danger-color);
+        }
+        
+        /* Enhanced Responsive Design */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 1.5rem;
+            }
+            
+            .game-selection {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container { 
+                padding: 1rem; 
+            }
+            
+            .btn { 
+                min-width: min(160px, 80vw); 
+                padding: 0.875rem 1.5rem;
+                font-size: clamp(0.875rem, 2.5vw, 0.9rem);
+                width: 100%;
+                max-width: 300px;
+            }
+            
+            .game-selection {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                max-width: 400px;
+            }
+            
+            .lobby {
+                min-height: 50vh;
+            }
+            
+            .game-btn {
+                min-height: 100px;
+                padding: 1.5rem;
+            }
+            
+            .debug-panel {
+                position: fixed;
+                top: 0.25rem;
+                right: 0.25rem;
+                width: 140px;
+                font-size: 0.65rem;
+                padding: 0.3rem 0.5rem;
+                z-index: 1001;
+            }
+            
+            .manual-handshake textarea {
+                min-height: 100px;
+                font-size: 0.875rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header {
+                margin-bottom: 1.5rem;
+                padding: 1.5rem 1rem;
+            }
+            
+            .header h1 {
+                font-size: clamp(1.75rem, 8vw, 2rem);
+            }
+            
+            .header p {
+                font-size: clamp(0.9rem, 3vw, 1rem);
+            }
+            
+            .btn {
+                padding: 0.75rem 1rem;
+                min-width: auto;
+                width: 100%;
+            }
+            
+            .game-board {
+                gap: 0.5rem;
+                padding: 1rem;
+            }
+            
+            .debug-panel {
+                position: fixed;
+                top: 0.1rem;
+                right: 0.1rem;
+                width: 120px;
+                font-size: 0.6rem;
+                padding: 0.25rem 0.4rem;
+                z-index: 1002;
+                opacity: 0.75;
+            }
+            
+            .debug-panel h3 {
+                font-size: 0.7rem;
+                margin-bottom: 0.3rem;
+            }
+            
+            .debug-item {
+                margin: 0.2rem 0;
+                font-size: 0.6rem;
+            }
+            
+            .debug-item strong {
+                font-size: 0.55rem;
+            }
+            
+            .manual-handshake {
+                padding: 1rem;
+            }
+            
+            .manual-handshake textarea {
+                min-height: 80px;
+                padding: 0.75rem;
+                font-size: 0.8rem;
+            }
+            
+            .game-over-actions {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            
+            .game-over-actions .btn {
+                width: 100%;
+                max-width: 250px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .container {
+                padding: 0.75rem;
+            }
+            
+            .header {
+                padding: 1rem 0.75rem;
+            }
+            
+            .game-board {
+                padding: 0.75rem;
+                gap: 0.375rem;
+            }
+            
+            .btn {
+                padding: 0.625rem 0.75rem;
+                font-size: 0.875rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Decentralized Game Room</h1>
+            <p>P2P Gaming with Offline-First Design</p>
         </div>
-      </header>
-
-      <main id="main" class="container" role="main">
-        <!-- Lobby -->
-        <section id="lobby" class="view">
-          <h2>Choose a game</h2>
-          <div class="game-selection" role="list">
-            <button
-              class="btn game-card"
-              data-game="tictactoe"
-              role="listitem"
-              aria-label="Tic Tac Toe"
-            >
-              🎯 <span>Tic-Tac-Toe</span>
-            </button>
-            <button
-              class="btn game-card"
-              data-game="connect4"
-              role="listitem"
-              aria-label="Connect Four"
-            >
-              🔴 <span>Connect Four</span>
-            </button>
-            <button
-              class="btn game-card"
-              data-game="numguess"
-              role="listitem"
-              aria-label="Number Guessing"
-            >
-              🔢 <span>Number Guessing</span>
-            </button>
-          </div>
-        </section>
-
-        <!-- Game Mode / Actions -->
-        <section id="gameMode" class="view hidden" aria-hidden="true">
-          <h2 id="selectedGameTitle">Game</h2>
-          <div class="actions">
-            <button class="btn primary" data-action="create">
-              Create Room
-            </button>
-            <button class="btn" data-action="join">Join Room</button>
-            <button class="btn secondary" data-action="ai">Play vs AI</button>
-            <button class="btn" data-action="hotseat">Hotseat</button>
-            <button class="btn ghost" data-action="back">Back</button>
-          </div>
-        </section>
-
-        <!-- Game screen -->
-        <section id="game" class="view hidden" aria-hidden="true">
-          <header class="game-header">
+        
+        <!-- Lobby View -->
+        <div id="lobby" class="lobby">
+            <h2>Choose Your Game</h2>
+            <div class="game-selection">
+                <button class="btn game-btn" onclick="selectGame('tictactoe')">🎯 Tic-Tac-Toe</button>
+                <button class="btn game-btn" onclick="selectGame('connect4')">🔴 Connect Four</button>
+                <button class="btn game-btn" onclick="selectGame('numguess')">🔢 Number Guessing</button>
+            </div>
+        </div>
+        
+        <!-- Game Mode Selection -->
+        <div id="gameMode" class="lobby hidden">
+            <h2 id="selectedGameTitle">Game Selected</h2>
+            <button class="btn" onclick="createRoom()">Create Room</button>
+            <button class="btn" onclick="joinRoom()">Join Room</button>
+            <button class="btn offline" onclick="playVsAI()">Play vs AI (Hardest)</button>
+            <button class="btn offline" onclick="playHotseat()">Hotseat (Offline)</button>
+            <button class="btn back-btn" onclick="backToGameSelection()">Back to Games</button>
+        </div>
+        
+        <!-- Room Info View (No longer needed - removed room ID functionality) -->
+        
+        <!-- Game View -->
+        <div id="game" class="hidden">
             <h2 id="gameTitle">Game</h2>
-            <div id="gameControls">
-              <button class="btn ghost" data-action="rematch">Rematch</button>
-              <button class="btn ghost" data-action="home">Home</button>
+            
+            <!-- Tic-Tac-Toe Board -->
+            <div id="tictactoeBoard" class="game-board hidden"></div>
+            
+            <!-- Connect Four Board -->
+            <div id="connect4Board" class="connect4-board hidden"></div>
+            
+            
+            <!-- Number Guessing Game -->
+            <div id="numguessControls" class="hidden">
+                <div class="game-info">
+                    <div id="numguessInfo">Guess a number between 1 and 100!</div>
+                    <div id="numguessAttempts">Attempts: 0</div>
+                </div>
+                <input type="number" id="numguessInput" class="numguess-input" placeholder="Enter your guess" min="1" max="100">
+                <button class="btn" onclick="makeNumGuess()">Guess!</button>
             </div>
-          </header>
-
-          <!-- Boards -->
-          <div
-            id="tictactoeBoard"
-            class="game-board hidden"
-            aria-live="polite"
-          ></div>
-          <div
-            id="connect4Board"
-            class="connect4-board hidden"
-            aria-live="polite"
-          ></div>
-
-          <div id="numguessControls" class="hidden">
-            <div class="game-info">
-              <div id="numguessInfo">Guess a number between 1 and 100!</div>
-              <div id="numguessAttempts">Attempts: 0</div>
+            
+            <!-- Game Info Panel -->
+            <div id="gameInfo" class="game-info">
+                <div id="scoreDisplay" class="score-display"></div>
+                <div class="status" id="gameStatus">Your turn!</div>
             </div>
-            <div class="numguess-input-wrap">
-              <input
-                id="numguessInput"
-                class="numguess-input"
-                type="number"
-                inputmode="numeric"
-                min="1"
-                max="100"
-                aria-label="Your guess"
-              />
-              <button class="btn primary" data-action="guess">Guess</button>
+            
+            <!-- Game Over Actions -->
+            <div id="gameOverActions" class="game-over-actions hidden">
+                <button class="btn" onclick="rematchGame()">Rematch</button>
+                <button class="btn back-btn" onclick="backToGameSelection()">Home</button>
             </div>
-          </div>
-
-          <aside id="gameInfo" class="game-info-panel" aria-live="polite">
-            <div id="scoreDisplay" class="score-display"></div>
-            <div id="gameStatus" class="status">Ready</div>
-          </aside>
-        </section>
-      </main>
-
-      <!-- Manual handshake modal (accessible) -->
-      <div
-        id="handshakeModal"
-        class="modal"
-        role="dialog"
-        aria-modal="true"
-        aria-hidden="true"
-        aria-labelledby="handshakeTitle"
-      >
-        <div class="modal-inner" role="document">
-          <header class="modal-header">
-            <h3 id="handshakeTitle">Manual P2P Handshake</h3>
-            <button
-              class="modal-close"
-              data-action="close-modal"
-              aria-label="Close"
-            >
-              ×
-            </button>
-          </header>
-          <div class="modal-body">
-            <div id="modeSelection">
-              <p>Choose your role</p>
-              <div class="stack">
-                <button class="btn" data-action="start-create">
-                  Generate Offer
-                </button>
-                <button class="btn" data-action="start-join">
-                  I have an offer
-                </button>
-              </div>
-            </div>
-
-            <div id="createMode" class="hidden">
-              <label for="offerText" class="sr-only">Offer</label>
-              <textarea
-                id="offerText"
-                readonly
-                class="manual-textarea"
-              ></textarea>
-              <div class="row">
-                <button class="btn" data-action="copy-offer">Copy Offer</button>
-                <button class="btn" data-action="show-answer-input">
-                  Paste Answer
-                </button>
-              </div>
-              <textarea
-                id="answerInput"
-                placeholder="Paste acceptor's answer here"
-                class="manual-textarea hidden"
-              ></textarea>
-              <div class="row">
-                <button class="btn primary hidden" data-action="submit-answer">
-                  Connect
-                </button>
-              </div>
-            </div>
-
-            <div id="joinMode" class="hidden">
-              <label for="receivedOfferInput" class="sr-only"
-                >Received Offer</label
-              >
-              <textarea
-                id="receivedOfferInput"
-                placeholder="Paste the offer you received"
-                class="manual-textarea"
-              ></textarea>
-              <div class="row">
-                <button class="btn primary" data-action="generate-answer">
-                  Generate Answer
-                </button>
-                <button
-                  class="btn"
-                  data-action="copy-answer"
-                  style="display: none"
-                >
-                  Copy Answer
-                </button>
-              </div>
-              <textarea
-                id="answerText"
-                readonly
-                class="manual-textarea hidden"
-              ></textarea>
-            </div>
-          </div>
+            
+            <button class="btn back-btn" onclick="backToGameSelection()">Back to Games</button>
         </div>
-      </div>
-
-      <!-- Debug panel (collapsed by default) -->
-      <div id="debugPanel" class="debug-panel collapsed" aria-hidden="true">
-        <button id="debugToggle" class="btn tiny">⚙</button>
-        <div id="debugContent" class="debug-content hidden">
-          <div>Memory: <strong id="memoryUsage">--</strong></div>
-          <div>Online: <strong id="onlineStatus">--</strong></div>
-          <div>Peer: <strong id="peerStatus">--</strong></div>
-          <div>Mode: <strong id="gameState">--</strong></div>
-          <div>
-            <button class="btn tiny" data-action="export-memory">
-              Export Memory
-            </button>
-          </div>
+        
+        <!-- Manual Handshake Modal -->
+        <div id="handshakeModal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Manual P2P Handshake</h3>
+                    <button class="modal-close" onclick="closeHandshakeModal()" aria-label="Close modal">
+                        ×
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="manual-handshake">
+                        <!-- Mode Selection -->
+                        <div id="modeSelection">
+                            <h4>Choose your role:</h4>
+                            <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
+                                <button class="btn" onclick="startCreateMode()">🔗 Generate Link for Friend<span id="createLoader" class="loader hidden"></span></button>
+                                <button class="btn" onclick="startJoinMode()">📋 I Have a Link</button>
+                            </div>
+                        </div>
+                        
+                        <!-- CREATE MODE: Generate offer for sharing -->
+                        <div id="createMode" class="hidden">
+                            <h4>Step 1: Share this offer with your friend</h4>
+                            <textarea id="offerText" readonly style="width: 100%; height: 120px; background: var(--background-primary); color: var(--secondary-color); border: 1px solid var(--border-color); padding: 1rem; font-family: 'JetBrains Mono', monospace; margin: 1rem 0; border-radius: var(--radius-md); font-size: 0.875rem; line-height: 1.4;"></textarea>
+                            <button class="btn" onclick="copyToClipboard('offerText')">📋 Copy Offer</button>
+                            
+                            <h4 style="margin-top: 2rem;">Step 2: Paste the answer you receive back</h4>
+                            <textarea id="answerInput" placeholder="Paste the answer your friend sends back..." style="width: 100%; height: 120px; background: var(--background-primary); color: var(--secondary-color); border: 1px solid var(--border-color); padding: 1rem; font-family: 'JetBrains Mono', monospace; margin: 1rem 0; border-radius: var(--radius-md); font-size: 0.875rem; line-height: 1.4;"></textarea>
+                            <button class="btn" onclick="processReceivedAnswer()">🔗 Connect with Answer</button>
+                        </div>
+                        
+                        <!-- JOIN MODE: Process offer and generate answer -->
+                        <div id="joinMode" class="hidden">
+                            <h4>Step 1: Paste the offer you received</h4>
+                            <textarea id="receivedOfferInput" placeholder='Paste the offer here (e.g., {"type":"offer","sdp":"v=0..."})' style="width: 100%; height: 120px; background: var(--background-primary); color: var(--secondary-color); border: 1px solid var(--border-color); padding: 1rem; font-family: 'JetBrains Mono', monospace; margin: 1rem 0; border-radius: var(--radius-md); font-size: 0.875rem; line-height: 1.4;"></textarea>
+                            <button class="btn" onclick="processReceivedOffer()">⚡ Generate Answer<span id="answerLoader" class="loader hidden"></span></button>
+                            
+                            <!-- Answer generated - show to user -->
+                            <div id="generatedAnswerSection" class="hidden">
+                                <h4 style="margin-top: 2rem;">Step 2: Send this answer back to your friend</h4>
+                                <textarea id="answerText" readonly style="width: 100%; height: 120px; background: var(--background-primary); color: var(--secondary-color); border: 1px solid var(--border-color); padding: 1rem; font-family: 'JetBrains Mono', monospace; margin: 1rem 0; border-radius: var(--radius-md); font-size: 0.875rem; line-height: 1.4;"></textarea>
+                                <button class="btn" onclick="copyToClipboard('answerText')">📋 Copy Answer</button>
+                                <div class="status info" style="margin-top: 1rem;">✅ Answer generated! Copy and send it back. Connection will establish automatically.</div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                            <button class="btn back-btn" onclick="resetHandshakeModal()">🔄 Back to Mode Selection</button>
+                            <button class="btn back-btn" onclick="closeHandshakeModal()">❌ Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+        
+        <!-- Debug Panel -->
+        <div class="debug-panel">
+            <h3>🔧 Debug Info</h3>
+            <div class="debug-item">Memory: <strong id="memoryUsage">--</strong></div>
+            <div class="debug-item">Online: <strong id="onlineStatus">--</strong></div>
+            <div class="debug-item">Peer: <strong id="peerStatus">--</strong></div>
+            <div class="debug-item">Game State: <strong id="gameState">--</strong></div>
+            <button onclick="exportMemorySnapshot()" style="background: #333; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; margin-top: 10px; cursor: pointer; font-size: 0.8rem;">Export Memory Snapshot</button>
+        </div>
 
-      <footer class="site-footer">
-        <div class="container"><small>Decentralized Game Room</small></div>
-      </footer>
+    <script>
+        // Memory-optimized multi-game engine
+        class GameEngine {
+            constructor() {
+                this.gameType = 'tictactoe';
+                this.reset();
+                this.MAX_HISTORY = 50; // Memory optimization: limit move history
+            }
+            
+            setGameType(type) {
+                this.gameType = type;
+                this.reset();
+            }
+            
+            reset() {
+                this.currentPlayer = 'x';
+                this.gameOver = false;
+                this.winner = null;
+                this.moveHistory = [];
+                this.score = { x: 0, o: 0, draws: 0 };
+                
+                switch(this.gameType) {
+                    case 'tictactoe':
+                        this.board = Array(9).fill('');
+                        break;
+                    case 'connect4':
+                        this.board = Array(42).fill(''); // 7x6 grid
+                        break;
+                    case 'numguess':
+                        this.targetNumber = Math.floor(Math.random() * 100) + 1;
+                        this.attempts = 0;
+                        this.maxAttempts = 7;
+                        this.guesses = [];
+                        break;
+                }
+            }
+            
+            makeMove(data) {
+                switch(this.gameType) {
+                    case 'tictactoe':
+                        return this.makeTicTacToeMove(data);
+                    case 'connect4':
+                        return this.makeConnect4Move(data);
+                    case 'numguess':
+                        return this.makeNumGuessMove(data);
+                }
+                return false;
+            }
+            
+            makeTicTacToeMove(index) {
+                if (this.board[index] !== '' || this.gameOver) return false;
+                
+                this.board[index] = this.currentPlayer;
+                this.moveHistory.push({player: this.currentPlayer, index: index});
+                
+                if (this.moveHistory.length > this.MAX_HISTORY) {
+                    this.moveHistory.shift();
+                }
+                
+                if (this.checkTicTacToeWin(index)) {
+                    this.gameOver = true;
+                    this.winner = this.currentPlayer;
+                    this.score[this.currentPlayer]++;
+                    return true;
+                }
+                
+                if (this.checkTicTacToeDraw()) {
+                    this.gameOver = true;
+                    this.winner = 'draw';
+                    this.score.draws++;
+                    return true;
+                }
+                
+                this.currentPlayer = this.currentPlayer === 'x' ? 'o' : 'x';
+                return true;
+            }
+            
+            makeConnect4Move(col) {
+                if (this.gameOver || col < 0 || col > 6) return false;
+                
+                for (let row = 5; row >= 0; row--) {
+                    const index = row * 7 + col;
+                    if (this.board[index] === '') {
+                        this.board[index] = this.currentPlayer;
+                        this.moveHistory.push({player: this.currentPlayer, index: index});
+                        
+                        if (this.checkConnect4Win(index)) {
+                            this.gameOver = true;
+                            this.winner = this.currentPlayer;
+                            this.score[this.currentPlayer]++;
+                            return true;
+                        }
+                        
+                        if (this.checkConnect4Draw()) {
+                            this.gameOver = true;
+                            this.winner = 'draw';
+                            this.score.draws++;
+                            return true;
+                        }
+                        
+                        this.currentPlayer = this.currentPlayer === 'x' ? 'o' : 'x';
+                        return true;
+                    }
+                }
+                return false;
+            }
+            
+            
+            makeNumGuessMove(guess) {
+                if (this.gameOver || this.attempts >= this.maxAttempts) return false;
+                
+                this.attempts++;
+                this.guesses.push(guess);
+                
+                if (guess === this.targetNumber) {
+                    this.gameOver = true;
+                    this.winner = this.currentPlayer;
+                    this.score[this.currentPlayer]++;
+                    return true;
+                } else if (this.attempts >= this.maxAttempts) {
+                    this.gameOver = true;
+                    this.winner = this.currentPlayer === 'x' ? 'o' : 'x';
+                    this.score[this.winner]++;
+                    return true;
+                }
+                
+                return true;
+            }
+            
+            checkTicTacToeWin(index) {
+                const lines = [
+                    [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+                    [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+                    [0, 4, 8], [2, 4, 6] // diagonals
+                ];
+                
+                return lines.some(line => 
+                    line.includes(index) && 
+                    this.board[line[0]] && 
+                    this.board[line[0]] === this.board[line[1]] && 
+                    this.board[line[1]] === this.board[line[2]]
+                );
+            }
+            
+            checkTicTacToeDraw() {
+                return this.board.every(cell => cell !== '');
+            }
+            
+            checkConnect4Win(index) {
+                const row = Math.floor(index / 7);
+                const col = index % 7;
+                const player = this.board[index];
+                
+                // Check horizontal
+                let count = 1;
+                for (let c = col - 1; c >= 0 && this.board[row * 7 + c] === player; c--) count++;
+                for (let c = col + 1; c < 7 && this.board[row * 7 + c] === player; c++) count++;
+                if (count >= 4) return true;
+                
+                // Check vertical
+                count = 1;
+                for (let r = row - 1; r >= 0 && this.board[r * 7 + col] === player; r--) count++;
+                for (let r = row + 1; r < 6 && this.board[r * 7 + col] === player; r++) count++;
+                if (count >= 4) return true;
+                
+                // Check diagonal (top-left to bottom-right)
+                count = 1;
+                for (let r = row - 1, c = col - 1; r >= 0 && c >= 0 && this.board[r * 7 + c] === player; r--, c--) count++;
+                for (let r = row + 1, c = col + 1; r < 6 && c < 7 && this.board[r * 7 + c] === player; r++, c++) count++;
+                if (count >= 4) return true;
+                
+                // Check diagonal (top-right to bottom-left)
+                count = 1;
+                for (let r = row - 1, c = col + 1; r >= 0 && c < 7 && this.board[r * 7 + c] === player; r--, c++) count++;
+                for (let r = row + 1, c = col - 1; r < 6 && c >= 0 && this.board[r * 7 + c] === player; r++, c--) count++;
+                if (count >= 4) return true;
+                
+                return false;
+            }
+            
+            checkConnect4Draw() {
+                return this.board.every(cell => cell !== '');
+            }
+            
+            
+            // Advanced AI using minimax algorithm for hardest difficulty
+            getAIMove() {
+                switch(this.gameType) {
+                    case 'tictactoe':
+                        return this.getTicTacToeAIMove();
+                    case 'connect4':
+                        return this.getConnect4AIMove();
+                    case 'numguess':
+                        return this.getNumGuessAIMove();
+                }
+                return -1;
+            }
+            
+            getTicTacToeAIMove() {
+                // Minimax algorithm for unbeatable AI
+                const minimax = (board, depth, isMaximizing, alpha = -Infinity, beta = Infinity) => {
+                    const result = this.evaluateTicTacToeBoard(board);
+                    if (result !== null) return result;
+                    
+                    if (isMaximizing) {
+                        let maxEval = -Infinity;
+                        for (let i = 0; i < 9; i++) {
+                            if (board[i] === '') {
+                                board[i] = 'o';
+                                const evalScore = minimax(board, depth + 1, false, alpha, beta);
+                                board[i] = '';
+                                maxEval = Math.max(maxEval, evalScore);
+                                alpha = Math.max(alpha, evalScore);
+                                if (beta <= alpha) break;
+                            }
+                        }
+                        return maxEval;
+                    } else {
+                        let minEval = Infinity;
+                        for (let i = 0; i < 9; i++) {
+                            if (board[i] === '') {
+                                board[i] = 'x';
+                                const evalScore = minimax(board, depth + 1, true, alpha, beta);
+                                board[i] = '';
+                                minEval = Math.min(minEval, evalScore);
+                                beta = Math.min(beta, evalScore);
+                                if (beta <= alpha) break;
+                            }
+                        }
+                        return minEval;
+                    }
+                };
+                
+                let bestMove = -1;
+                let bestValue = -Infinity;
+                const boardCopy = [...this.board];
+                
+                for (let i = 0; i < 9; i++) {
+                    if (boardCopy[i] === '') {
+                        boardCopy[i] = 'o';
+                        const moveValue = minimax(boardCopy, 0, false);
+                        boardCopy[i] = '';
+                        
+                        if (moveValue > bestValue) {
+                            bestValue = moveValue;
+                            bestMove = i;
+                        }
+                    }
+                }
+                
+                return bestMove;
+            }
+            
+            evaluateTicTacToeBoard(board) {
+                const lines = [
+                    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                    [0, 4, 8], [2, 4, 6]
+                ];
+                
+                for (let line of lines) {
+                    const [a, b, c] = line;
+                    if (board[a] && board[a] === board[b] && board[b] === board[c]) {
+                        return board[a] === 'o' ? 10 : -10;
+                    }
+                }
+                
+                if (board.every(cell => cell !== '')) return 0;
+                return null;
+            }
+            
+            getConnect4AIMove() {
+                // Smart Connect 4 AI - prioritize center and look for wins/blocks
+                for (let col = 0; col < 7; col++) {
+                    if (this.canDropConnect4([...this.board], col)) {
+                        const testBoard = this.dropConnect4Piece([...this.board], col, 'o');
+                        if (this.checkConnect4WinForBoard(testBoard, this.getDropIndex(col))) {
+                            return col; // Winning move
+                        }
+                    }
+                }
+                
+                // Block opponent wins
+                for (let col = 0; col < 7; col++) {
+                    if (this.canDropConnect4([...this.board], col)) {
+                        const testBoard = this.dropConnect4Piece([...this.board], col, 'x');
+                        if (this.checkConnect4WinForBoard(testBoard, this.getDropIndex(col))) {
+                            return col; // Block opponent
+                        }
+                    }
+                }
+                
+                // Prefer center columns
+                const priorities = [3, 2, 4, 1, 5, 0, 6];
+                for (let col of priorities) {
+                    if (this.canDropConnect4([...this.board], col)) {
+                        return col;
+                    }
+                }
+                
+                return 3; // Fallback
+            }
+            
+            canDropConnect4(board, col) {
+                return board[col] === '';
+            }
+            
+            dropConnect4Piece(board, col, player) {
+                const newBoard = [...board];
+                for (let row = 5; row >= 0; row--) {
+                    const index = row * 7 + col;
+                    if (newBoard[index] === '') {
+                        newBoard[index] = player;
+                        break;
+                    }
+                }
+                return newBoard;
+            }
+            
+            getDropIndex(col) {
+                for (let row = 5; row >= 0; row--) {
+                    const index = row * 7 + col;
+                    if (this.board[index] === '') {
+                        return index;
+                    }
+                }
+                return -1;
+            }
+            
+            checkConnect4WinForBoard(board, index) {
+                const row = Math.floor(index / 7);
+                const col = index % 7;
+                const player = board[index];
+                
+                let count = 1;
+                for (let c = col - 1; c >= 0 && board[row * 7 + c] === player; c--) count++;
+                for (let c = col + 1; c < 7 && board[row * 7 + c] === player; c++) count++;
+                if (count >= 4) return true;
+                
+                count = 1;
+                for (let r = row - 1; r >= 0 && board[r * 7 + col] === player; r--) count++;
+                for (let r = row + 1; r < 6 && board[r * 7 + col] === player; r++) count++;
+                if (count >= 4) return true;
+                
+                count = 1;
+                for (let r = row - 1, c = col - 1; r >= 0 && c >= 0 && board[r * 7 + c] === player; r--, c--) count++;
+                for (let r = row + 1, c = col + 1; r < 6 && c < 7 && board[r * 7 + c] === player; r++, c++) count++;
+                if (count >= 4) return true;
+                
+                count = 1;
+                for (let r = row - 1, c = col + 1; r >= 0 && c < 7 && board[r * 7 + c] === player; r--, c++) count++;
+                for (let r = row + 1, c = col - 1; r < 6 && c >= 0 && board[r * 7 + c] === player; r++, c--) count++;
+                if (count >= 4) return true;
+                
+                return false;
+            }
+            
 
-      <script src="app.js" defer></script>
-    </div>
-  </body>
+            
+            getNumGuessAIMove() {
+                if (this.guesses.length === 0) {
+                    return 50;
+                }
+                
+                let min = 1, max = 100;
+                
+                for (let guess of this.guesses) {
+                    if (guess < this.targetNumber) {
+                        min = Math.max(min, guess + 1);
+                    } else if (guess > this.targetNumber) {
+                        max = Math.min(max, guess - 1);
+                    }
+                }
+                
+                return Math.floor((min + max) / 2);
+            }
+            
+            // Compact serialization for network messages
+            serializeMove(data) {
+                return `${this.gameType}:${JSON.stringify(data)}`;
+            }
+            
+            deserializeMove(message) {
+                const [gameType, dataStr] = message.split(':');
+                if (gameType === this.gameType) {
+                    try {
+                        return JSON.parse(dataStr);
+                    } catch (e) {
+                        return parseInt(dataStr); // Fallback for simple numbers
+                    }
+                }
+                return null;
+            }
+        }
+        
+        // Memory-optimized app state manager
+        class AppState {
+            constructor() {
+                this.gameEngine = new GameEngine();
+                this.currentMode = 'lobby';
+                this.selectedGame = 'tictactoe';
+                this.roomId = null;
+                this.peerConnection = null;
+                this.dataChannel = null;
+                this.signalingServer = null;
+                this.isOnline = navigator.onLine;
+                this.memoryUpdateInterval = null;
+                this.isInitiator = false; // Track if this peer initiated the connection
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupEventListeners();
+                this.startMemoryMonitoring();
+                this.updateOnlineStatus();
+                this.registerServiceWorker();
+            }
+            
+            setupEventListeners() {
+                window.addEventListener('online', () => this.updateOnlineStatus());
+                window.addEventListener('offline', () => this.updateOnlineStatus());
+                
+                // Memory optimization: single event listener for game board
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('cell')) {
+                        const index = parseInt(e.target.dataset.index);
+                        this.handleCellClick(index);
+                    } else if (e.target.classList.contains('connect4-cell')) {
+                        const index = parseInt(e.target.dataset.index);
+                        this.handleCellClick(index);
+                    }
+                });
+            }
+            
+            startMemoryMonitoring() {
+                // Memory optimization: update every 2 seconds instead of every second
+                this.memoryUpdateInterval = setInterval(() => {
+                    this.updateDebugInfo();
+                }, 2000);
+            }
+            
+            updateOnlineStatus() {
+                this.isOnline = navigator.onLine;
+                this.updateDebugInfo();
+                
+                if (!this.isOnline && this.currentMode === 'lobby') {
+                    this.showOfflineMessage();
+                }
+            }
+            
+            showOfflineMessage() {
+                const status = document.getElementById('roomStatus');
+                if (status) {
+                    status.textContent = 'Offline mode - AI and Hotseat available';
+                    status.className = 'status offline';
+                }
+            }
+            
+            updateDebugInfo() {
+                // Memory optimization: only update DOM when values change
+                const memoryEl = document.getElementById('memoryUsage');
+                const onlineEl = document.getElementById('onlineStatus');
+                const peerEl = document.getElementById('peerStatus');
+                const gameStateEl = document.getElementById('gameState');
+                
+                if (memoryEl && performance.memory) {
+                    const memoryMB = (performance.memory.usedJSHeapSize / 1024 / 1024).toFixed(1);
+                    memoryEl.textContent = `${memoryMB} MB`;
+                }
+                
+                if (onlineEl) onlineEl.textContent = this.isOnline ? 'true' : 'false';
+                if (peerEl) peerEl.textContent = this.dataChannel ? 'connected' : 'none';
+                if (gameStateEl) gameStateEl.textContent = this.currentMode;
+            }
+            
+            async registerServiceWorker() {
+                // Skip Service Worker registration for file:// protocol
+                if (window.location.protocol === 'file:') {
+                    console.log('Skipping Service Worker registration (file:// protocol not supported)');
+                    return;
+                }
+                
+                if ('serviceWorker' in navigator) {
+                    try {
+                        await navigator.serviceWorker.register('/sw.js');
+                        console.log('Service Worker registered');
+                    } catch (error) {
+                        console.log('Service Worker registration failed:', error);
+                    }
+                }
+            }
+            
+            // Game selection
+            selectGame(gameType) {
+                this.selectedGame = gameType;
+                this.gameEngine.setGameType(gameType);
+                this.showGameModeSelection();
+            }
+            
+            showGameModeSelection() {
+                document.getElementById('lobby').classList.add('hidden');
+                document.getElementById('gameMode').classList.remove('hidden');
+                
+                const gameNames = {
+                    'tictactoe': '🎯 Tic-Tac-Toe',
+                    'connect4': '🔴 Connect Four', 
+                    'rps': '✂️ Rock Paper Scissors',
+                    'numguess': '🔢 Number Guessing'
+                };
+                
+                document.getElementById('selectedGameTitle').textContent = gameNames[this.selectedGame];
+            }
+            
+            backToGameSelection() {
+                this.currentMode = 'lobby';
+                this.gameEngine.reset();
+                this.cleanupConnection();
+                document.getElementById('game').classList.add('hidden');
+                document.getElementById('gameMode').classList.add('hidden');
+                this.closeHandshakeModal();
+                document.getElementById('lobby').classList.remove('hidden');
+            }
+
+            // Game mode handlers
+            createRoom() {
+                console.log('Creating room - redirecting to manual handshake...');
+                this.currentMode = 'manual';
+                this.isInitiator = true;
+                
+                // Go directly to manual handshake
+                this.startManualHandshake();
+            }
+            
+            joinRoom() {
+                this.showJoinModal();
+            }
+            
+            playVsAI() {
+                this.currentMode = 'ai';
+                this.gameEngine.reset();
+                this.showGame();
+            }
+            
+            playHotseat() {
+                this.currentMode = 'hotseat';
+                this.gameEngine.reset();
+                this.showGame();
+            }
+            
+            
+            
+            showGame() {
+                document.getElementById('gameMode').classList.add('hidden');
+                document.getElementById('game').classList.remove('hidden');
+                this.renderGameBoard();
+                this.updateGameStatus();
+            }
+            
+            backToLobby() {
+                this.currentMode = 'lobby';
+                this.gameEngine.reset();
+                this.cleanupConnection();
+                this.isInitiator = false;
+                document.getElementById('game').classList.add('hidden');
+                document.getElementById('roomInfo').classList.add('hidden');
+                document.getElementById('lobby').classList.remove('hidden');
+            }
+            
+            showJoinModal() {
+                // Directly start manual handshake instead of showing join modal
+                this.startManualHandshake();
+            }
+            
+            closeJoinModal() {
+                // This method is kept for compatibility but does nothing
+                // since we removed the join modal
+            }
+            
+            async connectToRoom() {
+                console.log('Join room - redirecting to manual handshake...');
+                this.currentMode = 'manual';
+                this.isInitiator = false;
+                this.closeJoinModal();
+                
+                // Go directly to manual handshake
+                this.startManualHandshake();
+            }
+            
+            
+            // WebRTC and signaling
+            async connectToSignalingServer() {
+                try {
+                    console.log('Connecting to signaling server...');
+                    this.signalingServer = new WebSocket('ws://localhost:8080');
+                    
+                    this.signalingServer.onopen = () => {
+                        console.log('Connected to signaling server');
+                        if (this.isInitiator) {
+                            // Create room on server
+                            this.signalingServer.send(JSON.stringify({
+                                t: 'create',
+                                room: this.roomId
+                            }));
+                        } else {
+                            // Join room on server
+                            this.signalingServer.send(JSON.stringify({
+                                t: 'join',
+                                room: this.roomId
+                            }));
+                        }
+                    };
+                    
+                    this.signalingServer.onmessage = (event) => {
+                        const message = JSON.parse(event.data);
+                        console.log('Received signaling message:', message);
+                        this.handleSignalingMessage(message);
+                    };
+                    
+                    this.signalingServer.onerror = () => {
+                        console.log('Signaling server error');
+                        this.handleSignalingError();
+                    };
+                    
+                    this.signalingServer.onclose = () => {
+                        console.log('Signaling server disconnected');
+                        this.handleSignalingError();
+                    };
+                    
+                    // Memory optimization: timeout for signaling
+                    setTimeout(() => {
+                        if (!this.dataChannel) {
+                            this.handleSignalingError();
+                        }
+                    }, 10000);
+                    
+                } catch (error) {
+                    console.log('Signaling connection failed:', error);
+                    this.handleSignalingError();
+                }
+            }
+            
+            handleSignalingMessage(message) {
+                console.log('Handling signaling message:', message);
+                switch (message.t) {
+                    case 'created':
+                        this.updateRoomStatus('Room created on server. Waiting for peer...', 'waiting');
+                        break;
+                    case 'peer_joined':
+                        this.updateRoomStatus('Peer joined! Establishing connection...', 'info');
+                        if (this.isInitiator) {
+                            this.createPeerConnection();
+                        }
+                        break;
+                    case 'offer':
+                        this.handleOffer(message.offer);
+                        break;
+                    case 'answer':
+                        this.handleAnswer(message.answer);
+                        break;
+                    case 'ice':
+                        this.handleIceCandidate(message.cand);
+                        break;
+                    default:
+                        console.log('Unknown message type:', message.t);
+                }
+            }
+            
+            async createPeerConnection() {
+                try {
+                    console.log('Creating peer connection...');
+                    this.peerConnection = new RTCPeerConnection({
+                        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                    });
+                    
+                    this.peerConnection.onicecandidate = (event) => {
+                        if (event.candidate && this.signalingServer) {
+                            this.signalingServer.send(JSON.stringify({
+                                t: 'ice',
+                                room: this.roomId,
+                                cand: event.candidate
+                            }));
+                        }
+                    };
+                    
+                    const offer = await this.peerConnection.createOffer();
+                    await this.peerConnection.setLocalDescription(offer);
+                    
+                    if (this.signalingServer) {
+                        this.signalingServer.send(JSON.stringify({
+                            t: 'offer',
+                            room: this.roomId,
+                            offer: offer
+                        }));
+                    }
+                    
+                } catch (error) {
+                    console.log('Error creating peer connection:', error);
+                    this.handleSignalingError();
+                }
+            }
+            
+            async handleOffer(offer) {
+                try {
+                    if (!this.peerConnection) {
+                        this.peerConnection = new RTCPeerConnection({
+                            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                        });
+                        
+                        this.peerConnection.ondatachannel = (event) => {
+                            this.setupDataChannel(event.channel);
+                        };
+                        
+                        this.peerConnection.onicecandidate = (event) => {
+                            if (event.candidate && this.signalingServer) {
+                                this.signalingServer.send(JSON.stringify({
+                                    t: 'ice',
+                                    room: this.roomId,
+                                    cand: event.candidate
+                                }));
+                            }
+                        };
+                    }
+                    
+                    await this.peerConnection.setRemoteDescription(offer);
+                    const answer = await this.peerConnection.createAnswer();
+                    await this.peerConnection.setLocalDescription(answer);
+                    
+                    if (this.signalingServer) {
+                        this.signalingServer.send(JSON.stringify({
+                            t: 'answer',
+                            room: this.roomId,
+                            answer: answer
+                        }));
+                    }
+                    
+                } catch (error) {
+                    console.log('Error handling offer:', error);
+                    this.handleSignalingError();
+                }
+            }
+            
+            async handleAnswer(answer) {
+                try {
+                    console.log('=== HANDLING ANSWER ===');
+                    console.log('Answer object:', answer);
+                    console.log('Answer properties:', Object.keys(answer));
+                    console.log('Answer type:', answer.type);
+                    console.log('Answer SDP exists:', !!answer.sdp);
+                    
+                    // Validate answer format
+                    if (!answer || typeof answer !== 'object') {
+                        console.error('Answer is not a valid object:', answer);
+                        throw new Error('Invalid answer format - not an object');
+                    }
+                    
+                    if (!answer.sdp || typeof answer.sdp !== 'string') {
+                        console.error('Answer missing or invalid SDP:', answer.sdp);
+                        throw new Error('Invalid answer format - missing SDP');
+                    }
+                    
+                    // Accept any type that looks like an answer
+                    if (answer.type && answer.type !== 'answer') {
+                        console.error('Answer has wrong type:', answer.type);
+                        throw new Error('Invalid answer format - wrong type');
+                    }
+                    
+                    // If no type is specified, assume it's an answer
+                    if (!answer.type) {
+                        console.log('No type specified, assuming answer type');
+                        answer.type = 'answer';
+                    }
+                    
+                    await this.peerConnection.setRemoteDescription(answer);
+                    console.log('Remote description set successfully');
+                } catch (error) {
+                    console.error('Error handling answer:', error);
+                    throw error; // Re-throw to be caught by the calling function
+                }
+            }
+            
+            handleIceCandidate(candidate) {
+                if (this.peerConnection) {
+                    this.peerConnection.addIceCandidate(candidate);
+                }
+            }
+            
+            setupDataChannel(channel) {
+                this.dataChannel = channel;
+                console.log('Setting up data channel, current state:', channel.readyState);
+                
+                this.dataChannel.onopen = () => {
+                    console.log('=== DATA CHANNEL OPENED ===');
+                    console.log('Channel state:', this.dataChannel.readyState);
+                    this.updatePeerStatus('connected');
+                    
+                    // Set network mode and show game for both sender and receiver
+                    this.currentMode = 'network';
+                    this.gameEngine.reset();
+                    
+                    // Assign player symbols based on who initiated the connection
+                    // If we have a data channel that we created, we're the host (X)
+                    // If we received a data channel, we're the joiner (O)
+                    if (this.peerConnection && this.peerConnection.localDescription && this.peerConnection.localDescription.type === 'offer') {
+                        // We created the offer, so we're the host (X)
+                        this.myPlayerSymbol = 'x';
+                        console.log('I am the host (created offer), playing as X');
+                    } else {
+                        // We received the offer and created the answer, so we're the joiner (O)
+                        this.myPlayerSymbol = 'o';
+                        console.log('I am the joiner (created answer), playing as O');
+                    }
+                    
+                    // Close any open modals and show game
+                    this.closeHandshakeModal();
+                    this.showGame();
+                    this.renderGameBoard();
+                    
+                    console.log('=== GAME VIEW SHOULD BE VISIBLE NOW ===');
+                };
+                
+                this.dataChannel.onerror = (error) => {
+                    console.error('Data channel error:', error);
+                };
+                
+                this.dataChannel.onclose = () => {
+                    console.log('Data channel closed');
+                };
+                
+                this.dataChannel.onmessage = (event) => {
+                    console.log('Received message:', event.data);
+                    
+                    // Handle rematch signal
+                    if (event.data === 'rematch') {
+                        this.gameEngine.reset();
+                        const gameOverActionsEl = document.getElementById('gameOverActions');
+                        if (gameOverActionsEl) {
+                            gameOverActionsEl.classList.add('hidden');
+                        }
+                        this.renderGameBoard();
+                        this.updateGameStatus();
+                        return;
+                    }
+                    
+                    // Handle game moves
+                    const move = this.gameEngine.deserializeMove(event.data);
+                    if (move !== -1) {
+                        this.gameEngine.makeMove(move);
+                        this.renderGameBoard();
+                        this.updateGameStatus();
+                    }
+                };
+                
+                this.dataChannel.onclose = () => {
+                    console.log('Data channel closed');
+                    this.updatePeerStatus('disconnected');
+                };
+            }
+            
+            handleSignalingError() {
+                console.log('Signaling failed, suggesting manual handshake');
+                this.updateRoomStatus('Signaling server unavailable. Use manual handshake below.', 'error');
+            }
+            
+            updatePeerStatus(status) {
+                const statusEl = document.getElementById('peerStatus');
+                if (statusEl) {
+                    statusEl.textContent = status;
+                }
+            }
+            
+            // Manual handshake methods
+            startManualHandshake() {
+                this.resetHandshakeModal();
+                this.clearHandshakeInputs();
+                const modal = document.getElementById('handshakeModal');
+                modal.classList.add('active');
+                
+                // Close modal when clicking on overlay
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        this.closeHandshakeModal();
+                    }
+                });
+                
+                // Close modal on Escape key
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && modal.classList.contains('active')) {
+                        this.closeHandshakeModal();
+                    }
+                });
+            }
+            
+            closeHandshakeModal() {
+                const modal = document.getElementById('handshakeModal');
+                modal.classList.remove('active');
+            }
+            
+            async processManualAnswer() {
+                const answerText = document.getElementById('answerInput').value.trim();
+                if (!answerText) return;
+                
+                try {
+                    const answer = JSON.parse(answerText);
+                    await this.handleAnswer(answer);
+                    this.closeHandshakeModal();
+                } catch (error) {
+                    console.log('Error processing manual answer:', error);
+                    alert('Invalid answer format. Please check the peer\'s answer.');
+                }
+            }
+            
+            // Game rendering and interaction
+            renderGameBoard() {
+                // Hide all game boards first
+                document.getElementById('tictactoeBoard').classList.add('hidden');
+                document.getElementById('connect4Board').classList.add('hidden');
+                document.getElementById('numguessControls').classList.add('hidden');
+                
+                // Update game title
+                const gameNames = {
+                    'tictactoe': '🎯 Tic-Tac-Toe',
+                    'connect4': '🔴 Connect Four', 
+                    'rps': '✂️ Rock Paper Scissors',
+                    'numguess': '🔢 Number Guessing'
+                };
+                document.getElementById('gameTitle').textContent = gameNames[this.selectedGame];
+                
+                // Show and render the appropriate game board
+                switch(this.selectedGame) {
+                    case 'tictactoe':
+                        this.renderTicTacToeBoard();
+                        break;
+                    case 'connect4':
+                        this.renderConnect4Board();
+                        break;
+                    case 'numguess':
+                        this.renderNumGuessBoard();
+                        break;
+                }
+                
+                this.updateScoreDisplay();
+            }
+
+            updateScoreDisplay() {
+                const score = this.gameEngine.score;
+                let scoreDisplay = document.getElementById('scoreDisplay');
+                let scoreText = '';
+
+                if (this.gameEngine.gameType === 'numguess') {
+                    scoreText = `Your Score: ${score.x} | Opponent Score: ${score.o}`;
+                } else {
+                    scoreText = `Player X: ${score.x} | Player O: ${score.o} | Draws: ${score.draws}`;
+                }
+
+                if (scoreDisplay) {
+                    scoreDisplay.textContent = scoreText;
+                }
+            }
+            
+            renderTicTacToeBoard() {
+                const board = document.getElementById('tictactoeBoard');
+                board.classList.remove('hidden');
+                board.innerHTML = '';
+                
+                for (let i = 0; i < 9; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.index = i;
+                    
+                    if (this.gameEngine.board[i] === 'x') {
+                        cell.textContent = 'X';
+                        cell.classList.add('x');
+                    } else if (this.gameEngine.board[i] === 'o') {
+                        cell.textContent = 'O';
+                        cell.classList.add('o');
+                    }
+                    
+                    board.appendChild(cell);
+                }
+            }
+            
+            renderConnect4Board() {
+                const board = document.getElementById('connect4Board');
+                board.classList.remove('hidden');
+                board.innerHTML = '';
+                
+                for (let i = 0; i < 42; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'connect4-cell';
+                    cell.dataset.index = i;
+                    cell.dataset.col = i % 7;
+                    
+                    if (this.gameEngine.board[i] === 'x') {
+                        cell.classList.add('red');
+                    } else if (this.gameEngine.board[i] === 'o') {
+                        cell.classList.add('yellow');
+                    }
+                    
+                    board.appendChild(cell);
+                }
+            }
+            
+            renderNumGuessBoard() {
+                const controls = document.getElementById('numguessControls');
+                controls.classList.remove('hidden');
+                
+                document.getElementById('numguessInfo').textContent = 
+                    this.gameEngine.gameOver ? 
+                    `The number was ${this.gameEngine.targetNumber}!` :
+                    `Guess a number between 1 and 100! (${this.gameEngine.maxAttempts - this.gameEngine.attempts} attempts left)`;
+                    
+                document.getElementById('numguessAttempts').textContent = 
+                    `Attempts: ${this.gameEngine.attempts}`;
+            }
+            
+            // Game-specific move handlers
+            handleCellClick(index) {
+                let moveData;
+                
+                if (this.selectedGame === 'connect4') {
+                    const col = index % 7;
+                    moveData = col;
+                } else {
+                    moveData = index;
+                }
+                
+                // AI mode: player vs AI
+                if (this.currentMode === 'ai' && this.gameEngine.currentPlayer === 'x') {
+                    if (this.gameEngine.makeMove(moveData)) {
+                        this.renderGameBoard();
+                        this.updateGameStatus();
+                        
+                        // AI move after a short delay
+                        setTimeout(() => {
+                            if (!this.gameEngine.gameOver) {
+                                const aiMove = this.gameEngine.getAIMove();
+                                if (aiMove !== -1) {
+                                    this.gameEngine.makeMove(aiMove);
+                                    this.renderGameBoard();
+                                    this.updateGameStatus();
+                                }
+                            }
+                        }, 500);
+                    }
+                }
+                // Hotseat mode: alternating players
+                else if (this.currentMode === 'hotseat') {
+                    if (this.gameEngine.makeMove(moveData)) {
+                        this.renderGameBoard();
+                        this.updateGameStatus();
+                    }
+                }
+                // Network mode: only current player can move
+                else if (this.currentMode === 'network' && this.dataChannel && this.dataChannel.readyState === 'open') {
+                    // Check if it's this player's turn
+                    if (this.gameEngine.currentPlayer === this.myPlayerSymbol) {
+                        const moveMessage = this.gameEngine.serializeMove(moveData);
+                        this.dataChannel.send(moveMessage);
+                        
+                        if (this.gameEngine.makeMove(moveData)) {
+                            this.renderGameBoard();
+                            this.updateGameStatus();
+                        }
+                    }
+                }
+            }
+            
+            makeNumGuess() {
+                const input = document.getElementById('numguessInput');
+                const guess = parseInt(input.value);
+                
+                if (isNaN(guess) || guess < 1 || guess > 100) {
+                    alert('Please enter a number between 1 and 100');
+                    return;
+                }
+                
+                input.value = '';
+                
+                if (this.currentMode === 'ai') {
+                    if (this.gameEngine.makeMove(guess)) {
+                        this.renderGameBoard();
+                        this.updateGameStatus();
+                    }
+                } else if (this.currentMode === 'hotseat') {
+                    if (this.gameEngine.makeMove(guess)) {
+                        this.renderGameBoard();
+                        this.updateGameStatus();
+                    }
+                } else if (this.currentMode === 'network' && this.dataChannel && this.dataChannel.readyState === 'open') {
+                    if (this.gameEngine.currentPlayer === this.myPlayerSymbol) {
+                        const moveMessage = this.gameEngine.serializeMove(guess);
+                        this.dataChannel.send(moveMessage);
+                        
+                        if (this.gameEngine.makeMove(guess)) {
+                            this.renderGameBoard();
+                            this.updateGameStatus();
+                        }
+                    }
+                }
+            }
+            
+            updateGameStatus() {
+                const statusEl = document.getElementById('gameStatus');
+                const gameOverActionsEl = document.getElementById('gameOverActions');
+                if (!statusEl) return;
+                
+                if (this.gameEngine.gameOver) {
+                    if (this.gameEngine.winner === 'draw') {
+                        statusEl.textContent = "It's a draw!";
+                        statusEl.className = 'status';
+                    } else {
+                        statusEl.textContent = `Player ${this.gameEngine.winner.toUpperCase()} wins!`;
+                        statusEl.className = 'status connected';
+                    }
+                    
+                    // Show game over actions
+                    if (gameOverActionsEl) {
+                        gameOverActionsEl.classList.remove('hidden');
+                    }
+                } else {
+                    statusEl.textContent = `Player ${this.gameEngine.currentPlayer.toUpperCase()}'s turn`;
+                    statusEl.className = 'status';
+                    
+                    // Hide game over actions
+                    if (gameOverActionsEl) {
+                        gameOverActionsEl.classList.add('hidden');
+                    }
+                }
+            }
+            
+            rematchGame() {
+                // Reset game engine
+                this.gameEngine.reset();
+                
+                // Hide game over actions
+                const gameOverActionsEl = document.getElementById('gameOverActions');
+                if (gameOverActionsEl) {
+                    gameOverActionsEl.classList.add('hidden');
+                }
+                
+                // Re-render board and update status
+                this.renderGameBoard();
+                this.updateGameStatus();
+                
+                // If in network mode, send rematch signal to peer
+                if (this.currentMode === 'network' && this.dataChannel && this.dataChannel.readyState === 'open') {
+                    this.dataChannel.send('rematch');
+                }
+            }
+            
+            cleanupConnection() {
+                if (this.dataChannel) {
+                    this.dataChannel.close();
+                    this.dataChannel = null;
+                }
+                if (this.peerConnection) {
+                    this.peerConnection.close();
+                    this.peerConnection = null;
+                }
+                if (this.signalingServer) {
+                    this.signalingServer.close();
+                    this.signalingServer = null;
+                }
+            }
+            
+            // New methods for manual handshake functionality
+            openManualJoin() {
+                this.closeJoinModal();
+                document.getElementById('handshakeModal').classList.remove('hidden');
+                this.clearHandshakeInputs();
+                // Skip mode selection and go directly to join mode
+                this.startJoinMode();
+            }
+            
+            resetHandshakeModal() {
+                document.getElementById('modeSelection').classList.remove('hidden');
+                document.getElementById('createMode').classList.add('hidden');
+                document.getElementById('joinMode').classList.add('hidden');
+                document.getElementById('generatedAnswerSection').classList.add('hidden');
+                this.hideLoaders();
+            }
+            
+            clearHandshakeInputs() {
+                document.getElementById('offerText').value = '';
+                document.getElementById('answerInput').value = '';
+                document.getElementById('receivedOfferInput').value = '';
+                document.getElementById('answerText').value = '';
+            }
+            
+            hideLoaders() {
+                document.getElementById('createLoader').classList.add('hidden');
+                document.getElementById('answerLoader').classList.add('hidden');
+            }
+            
+            showLoader(loaderId) {
+                document.getElementById(loaderId).classList.remove('hidden');
+            }
+            
+            startCreateMode() {
+                document.getElementById('modeSelection').classList.add('hidden');
+                document.getElementById('createMode').classList.remove('hidden');
+                document.getElementById('joinMode').classList.add('hidden');
+                
+                // Show loader and generate offer
+                this.showLoader('createLoader');
+                this.generateOffer();
+            }
+            
+            startJoinMode() {
+                document.getElementById('modeSelection').classList.add('hidden');
+                document.getElementById('createMode').classList.add('hidden');
+                document.getElementById('joinMode').classList.remove('hidden');
+                document.getElementById('generatedAnswerSection').classList.add('hidden');
+            }
+            
+            async generateOffer() {
+                try {
+                    console.log('=== GENERATING OFFER (SENDER SIDE) ===');
+                    
+                    // Create completely new peer connection
+                    const pc = new RTCPeerConnection({
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:stun1.l.google.com:19302' }
+                        ]
+                    });
+                    
+                    // Set up ICE candidate gathering
+                    pc.onicecandidate = (event) => {
+                        console.log('ICE candidate generated:', event.candidate);
+                        // For manual handshake, we'll include candidates in the offer
+                    };
+                    
+                    pc.onconnectionstatechange = () => {
+                        console.log('Connection state changed:', pc.connectionState);
+                    };
+                    
+                    // Create data channel
+                    const dc = pc.createDataChannel('gameData');
+                    console.log('Data channel created:', dc.label);
+                    
+                    // Create offer and wait for ICE gathering
+                    const offer = await pc.createOffer();
+                    await pc.setLocalDescription(offer);
+                    
+                    // Wait for ICE gathering to complete (with timeout)
+                    await Promise.race([
+                        new Promise((resolve) => {
+                            if (pc.iceGatheringState === 'complete') {
+                                resolve();
+                            } else {
+                                pc.addEventListener('icegatheringstatechange', () => {
+                                    if (pc.iceGatheringState === 'complete') {
+                                        resolve();
+                                    }
+                                });
+                            }
+                        }),
+                        new Promise((resolve) => setTimeout(resolve, 3000)) // 3 second timeout
+                    ]);
+                    console.log('Offer ICE gathering state:', pc.iceGatheringState);
+                    
+                    // Only assign to instance variables after successful creation
+                    this.peerConnection = pc;
+                    this.dataChannel = dc;
+                    this.setupDataChannel(dc);
+                    
+                    // Display complete offer with ICE candidates
+                    const completeOffer = pc.localDescription;
+                    document.getElementById('offerText').value = JSON.stringify(completeOffer);
+                    console.log('Complete offer generated with ICE candidates');
+                    
+                    // Hide loader
+                    this.hideLoaders();
+                    
+                } catch (error) {
+                    console.error('Error generating offer:', error);
+                    alert('Failed to generate offer. Please try again.');
+                    this.hideLoaders();
+                }
+            }
+            
+            async processReceivedOffer() {
+                const offerText = document.getElementById('receivedOfferInput').value.trim();
+                if (!offerText) {
+                    alert('Please paste the offer you received.');
+                    return;
+                }
+                
+                // Show loader
+                this.showLoader('answerLoader');
+                
+                try {
+                    console.log('=== PROCESSING OFFER (RECEIVER SIDE) ===');
+                    const offer = JSON.parse(offerText);
+                    if (offer.type !== 'offer' || !offer.sdp) {
+                        throw new Error('Invalid offer format');
+                    }
+                    
+                    // Clean up any existing connection
+                    if (this.peerConnection) {
+                        this.peerConnection.close();
+                        this.peerConnection = null;
+                    }
+                    if (this.dataChannel) {
+                        this.dataChannel.close();
+                        this.dataChannel = null;
+                    }
+                    
+                    // Create fresh peer connection for receiver
+                    this.peerConnection = new RTCPeerConnection({
+                        iceServers: [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:stun1.l.google.com:19302' }
+                        ]
+                    });
+                    console.log('Peer connection created on receiver side');
+                    
+                    // Set up connection state monitoring
+                    this.peerConnection.onconnectionstatechange = () => {
+                        console.log('Receiver connection state:', this.peerConnection.connectionState);
+                    };
+                    
+                    await this.peerConnection.setRemoteDescription(offer);
+                    console.log('Remote description set');
+                    
+                    // Create answer
+                    const answer = await this.peerConnection.createAnswer();
+                    await this.peerConnection.setLocalDescription(answer);
+                    console.log('Answer created and local description set');
+                    
+                    // Wait for ICE gathering to complete (with timeout)
+                    await Promise.race([
+                        new Promise((resolve) => {
+                            if (this.peerConnection.iceGatheringState === 'complete') {
+                                resolve();
+                            } else {
+                                this.peerConnection.addEventListener('icegatheringstatechange', () => {
+                                    if (this.peerConnection.iceGatheringState === 'complete') {
+                                        resolve();
+                                    }
+                                });
+                            }
+                        }),
+                        new Promise((resolve) => setTimeout(resolve, 3000)) // 3 second timeout
+                    ]);
+                    console.log('ICE gathering state:', this.peerConnection.iceGatheringState);
+                    
+                    // Display the complete answer with ICE candidates
+                    const completeAnswer = this.peerConnection.localDescription;
+                    console.log('Generated complete answer object:', completeAnswer);
+                    console.log('Answer type:', completeAnswer.type);
+                    console.log('Answer SDP exists:', !!completeAnswer.sdp);
+                    document.getElementById('answerText').value = JSON.stringify(completeAnswer);
+                    document.getElementById('generatedAnswerSection').classList.remove('hidden');
+                    
+                    // Set up data channel handling for receiver
+                    this.peerConnection.ondatachannel = (event) => {
+                        console.log('=== DATA CHANNEL RECEIVED ON RECEIVER ===');
+                        console.log('Channel label:', event.channel.label);
+                        console.log('Channel state:', event.channel.readyState);
+                        this.setupDataChannel(event.channel);
+                    };
+                    
+                    console.log('Answer generated - waiting for sender to process it');
+                    
+                    // Hide loader
+                    this.hideLoaders();
+                    
+                } catch (error) {
+                    console.error('Error processing offer:', error);
+                    alert('Invalid offer format. Please check the offer you pasted.');
+                    this.hideLoaders();
+                }
+            }
+            
+            async processReceivedAnswer() {
+                const answerText = document.getElementById('answerInput').value.trim();
+                if (!answerText) {
+                    alert('Please paste the answer you received.');
+                    return;
+                }
+                
+                try {
+                    console.log('=== PROCESSING ANSWER (SENDER SIDE) ===');
+                    console.log('Raw answer text:', answerText);
+                    const answer = JSON.parse(answerText);
+                    console.log('Parsed answer object:', answer);
+                    console.log('Answer properties:', Object.keys(answer));
+                    console.log('Answer type:', answer.type);
+                    console.log('Answer SDP exists:', !!answer.sdp);
+                    
+                    // More lenient validation - just check for essential properties
+                    if (!answer || typeof answer !== 'object') {
+                        console.error('Answer is not a valid object:', answer);
+                        throw new Error('Invalid answer format - not an object');
+                    }
+                    
+                    if (!answer.sdp || typeof answer.sdp !== 'string') {
+                        console.error('Answer missing or invalid SDP:', answer.sdp);
+                        throw new Error('Invalid answer format - missing SDP');
+                    }
+                    
+                    // Accept any type that looks like an answer
+                    if (answer.type && answer.type !== 'answer') {
+                        console.error('Answer has wrong type:', answer.type);
+                        throw new Error('Invalid answer format - wrong type');
+                    }
+                    
+                    // If no type is specified, assume it's an answer
+                    if (!answer.type) {
+                        console.log('No type specified, assuming answer type');
+                        answer.type = 'answer';
+                    }
+                    
+                    if (!this.peerConnection) {
+                        alert('No peer connection found. Please generate an offer first.');
+                        return;
+                    }
+                    
+                    await this.peerConnection.setRemoteDescription(answer);
+                    console.log('Remote description set on sender side');
+                    console.log('Data channel state:', this.dataChannel.readyState);
+                    
+                    // Connection will be established via data channel onopen event
+                    console.log('Waiting for data channel to open...');
+                    
+                } catch (error) {
+                    console.error('Error processing answer:', error);
+                    alert('Invalid answer format. Please check the answer you pasted.');
+                }
+            }
+            
+            copyToClipboard(elementId) {
+                const element = document.getElementById(elementId);
+                element.select();
+                document.execCommand('copy');
+                
+                // Show temporary feedback
+                const originalText = element.nextElementSibling?.textContent;
+                if (element.nextElementSibling && element.nextElementSibling.tagName === 'BUTTON') {
+                    element.nextElementSibling.textContent = 'Copied!';
+                    setTimeout(() => {
+                        element.nextElementSibling.textContent = originalText || 'Copy';
+                    }, 2000);
+                }
+            }
+        }
+        
+        // Memory optimization: single global instance
+        let appState;
+        
+        // Initialize app when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, initializing app...');
+            try {
+                appState = new AppState();
+                console.log('AppState initialized successfully:', appState);
+                console.log('AppState methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(appState)));
+            } catch (error) {
+                console.error('Failed to initialize AppState:', error);
+                alert('Failed to initialize app: ' + error.message);
+            }
+        });
+        
+        // Global functions for button clicks (memory optimization: avoid multiple event listeners)
+        function createRoom() { 
+            console.log('Create room button clicked');
+            console.log('appState exists:', !!appState);
+            console.log('appState type:', typeof appState);
+            if (appState) {
+                console.log('Calling appState.createRoom()');
+                appState.createRoom(); 
+            } else {
+                console.error('appState is not initialized!');
+                alert('App not initialized. Please refresh the page.');
+            }
+        }
+        function joinRoom() { 
+            console.log('Join room button clicked');
+            if (appState) appState.joinRoom(); 
+        }
+        function playVsAI() { 
+            console.log('Play vs AI button clicked');
+            if (appState) appState.playVsAI(); 
+        }
+        function playHotseat() { 
+            console.log('Hotseat button clicked');
+            if (appState) appState.playHotseat(); 
+        }
+        function backToLobby() { 
+            console.log('Back to lobby button clicked');
+            if (appState) appState.backToLobby(); 
+        }
+        function closeJoinModal() { 
+            console.log('Close join modal button clicked');
+            if (appState) appState.closeJoinModal(); 
+        }
+        function connectToRoom() { 
+            console.log('Connect to room button clicked');
+            if (appState) appState.connectToRoom(); 
+        }
+        function startManualHandshake() { 
+            console.log('Start manual handshake button clicked');
+            if (appState) appState.startManualHandshake(); 
+        }
+        function closeHandshakeModal() { 
+            console.log('Close handshake modal button clicked');
+            if (appState) appState.closeHandshakeModal(); 
+        }
+        function processManualAnswer() { 
+            console.log('Process manual answer button clicked');
+            if (appState) appState.processManualAnswer(); 
+        }
+        function openManualJoin() {
+            console.log('Open manual join button clicked');
+            if (appState) appState.openManualJoin();
+        }
+        function processReceivedOffer() {
+            console.log('Process received offer button clicked');
+            if (appState) appState.processReceivedOffer();
+        }
+        function startCreateMode() {
+            console.log('Start create mode button clicked');
+            if (appState) appState.startCreateMode();
+        }
+        function startJoinMode() {
+            console.log('Start join mode button clicked');
+            if (appState) appState.startJoinMode();
+        }
+        function processReceivedAnswer() {
+            console.log('Process received answer button clicked');
+            if (appState) appState.processReceivedAnswer();
+        }
+        function resetHandshakeModal() {
+            console.log('Reset handshake modal button clicked');
+            if (appState) appState.resetHandshakeModal();
+        }
+        function copyToClipboard(elementId) {
+            console.log('Copy to clipboard button clicked');
+            if (appState) appState.copyToClipboard(elementId);
+        }
+        
+        function rematchGame() {
+            console.log('Rematch button clicked');
+            if (appState) appState.rematchGame();
+        }
+        
+        function selectGame(gameType) {
+            console.log('Game selected:', gameType);
+            if (appState) appState.selectGame(gameType);
+        }
+        
+        function backToGameSelection() {
+            console.log('Back to game selection');
+            if (appState) appState.backToGameSelection();
+        }
+        
+        
+        function makeNumGuess() {
+            console.log('Number guess made');
+            if (appState) appState.makeNumGuess();
+        }
+        
+        // Debug test function
+        function testCreateRoom() {
+            console.log('=== DEBUG TEST START ===');
+            console.log('Testing create room functionality...');
+            
+            // Check if appState exists
+            console.log('appState exists:', !!appState);
+            if (appState) {
+                console.log('appState type:', typeof appState);
+                console.log('appState methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(appState)));
+                
+                // Check DOM elements
+                const lobbyEl = document.getElementById('lobby');
+                const roomInfoEl = document.getElementById('roomInfo');
+                const roomIdEl = document.getElementById('roomId');
+                
+                console.log('DOM elements:', {
+                    lobby: lobbyEl,
+                    roomInfo: roomInfoEl,
+                    roomId: roomIdEl
+                });
+                
+                // Test the createRoom method directly
+                try {
+                    appState.createRoom();
+                } catch (error) {
+                    console.error('Error calling createRoom:', error);
+                }
+            } else {
+                console.error('appState is null or undefined!');
+            }
+            console.log('=== DEBUG TEST END ===');
+        }
+        
+        // Memory snapshot export function
+        function exportMemorySnapshot() {
+            if (performance.memory) {
+                const memory = performance.memory;
+                const snapshot = {
+                    usedJSHeapSize: `${(memory.usedJSHeapSize / 1024 / 1024).toFixed(2)} MB`,
+                    totalJSHeapSize: `${(memory.totalJSHeapSize / 1024 / 1024).toFixed(2)} MB`,
+                    jsHeapSizeLimit: `${(memory.jsHeapSizeLimit / 1024 / 1024).toFixed(2)} MB`,
+                    timestamp: new Date().toISOString()
+                };
+                
+                const blob = new Blob([JSON.stringify(snapshot, null, 2)], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'memory-snapshot.json';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+    </script>
+</body>
 </html>
