@@ -881,7 +881,7 @@
             <h2 id="selectedGameTitle">Game Selected</h2>
             <button class="btn" onclick="createRoom()">Create Room</button>
             <button class="btn" onclick="joinRoom()">Join Room</button>
-            <button class="btn offline" onclick="playVsAI()">Play vs AI (Hardest)</button>
+            <button class="btn offline" onclick="playVsAI()">Play vs AI</button>
             <button class="btn offline" onclick="playHotseat()">Hotseat (Offline)</button>
             <button class="btn back-btn" onclick="backToGameSelection()">Back to Games</button>
         </div>
@@ -947,13 +947,10 @@
                     <div class="manual-handshake">
                         <!-- Mode Selection -->
                         <div id="modeSelection">
-                            <h4>Choose your role:</h4>
-
                             <!-- Player Name Input -->
                             <div style="margin: 1.5rem 0;">
                                 <h5 style="margin-bottom: 0.75rem; color: var(--text-secondary);">Your Name (optional):</h5>
                                 <div>
-                                    <label for="myName" style="display: block; margin-bottom: 0.25rem; font-size: 0.875rem; color: var(--text-secondary);">Enter your name:</label>
                                     <input type="text" id="myName" placeholder="Your name" maxlength="20" style="width: 100%; padding: 0.75rem; background: var(--background-primary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 0.875rem;" />
                                 </div>
                             </div>
@@ -967,7 +964,6 @@
                         <!-- CREATE MODE: Generate offer for sharing -->
                         <div id="createMode" class="hidden">
                             <h4>Step 1: Share this offer with your friend</h4>
-                            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem;">📦 This offer is compressed using pure JavaScript for easy sharing!</p>
                             <textarea id="offerText" readonly style="width: 100%; height: 120px; background: var(--background-primary); color: var(--secondary-color); border: 1px solid var(--border-color); padding: 1rem; font-family: 'JetBrains Mono', monospace; margin: 1rem 0; border-radius: var(--radius-md); font-size: 0.875rem; line-height: 1.4;"></textarea>
                             <button class="btn" onclick="copyToClipboard('offerText')">📋 Copy Offer</button>
                             
@@ -985,7 +981,6 @@
                             <!-- Answer generated - show to user -->
                             <div id="generatedAnswerSection" class="hidden">
                                 <h4 style="margin-top: 2rem;">Step 2: Send this answer back to your friend</h4>
-                                <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem;">📦 This answer is compressed using pure JavaScript for easy sharing!</p>
                                 <textarea id="answerText" readonly style="width: 100%; height: 120px; background: var(--background-primary); color: var(--secondary-color); border: 1px solid var(--border-color); padding: 1rem; font-family: 'JetBrains Mono', monospace; margin: 1rem 0; border-radius: var(--radius-md); font-size: 0.875rem; line-height: 1.4;"></textarea>
                                 <button class="btn" onclick="copyToClipboard('answerText')">📋 Copy Answer</button>
                                 <div class="status info" style="margin-top: 1rem;">✅ Answer generated! Copy and send it back. Connection will establish automatically.</div>
@@ -1014,36 +1009,21 @@
     <script>
         // Pure JavaScript SDP Encoding/Decoding utilities for shorter strings
         function simpleCompress(text) {
-            console.log('=== SIMPLE COMPRESS ===');
-            console.log('Input text length:', text.length);
-            console.log('Input text preview:', text.substring(0, 200) + '...');
-
+          
             // Use a much simpler and safer approach - just basic base64 encoding
             // The pattern replacement was causing issues, so let's use a more reliable method
             let compressed = text;
 
             // Only replace line breaks to make it more compact
             compressed = compressed.replace(/\r\n/g, '|').replace(/\n/g, '|');
-
-            console.log('After line break compression, length:', compressed.length);
-            console.log('Compressed text preview:', compressed.substring(0, 200) + '...');
-            console.log('=== SIMPLE COMPRESS COMPLETE ===');
-
             return compressed;
         }
 
         function simpleDecompress(compressed) {
-            console.log('=== SIMPLE DECOMPRESS ===');
-            console.log('Input compressed string length:', compressed.length);
-            console.log('Input compressed string preview:', compressed.substring(0, 200) + '...');
-
             // Simple decompression - just restore line breaks
             let decompressed = compressed.replace(/\|/g, '\r\n');
 
-            console.log('After line break restoration, length:', decompressed.length);
-            console.log('Final decompressed preview:', decompressed.substring(0, 200) + '...');
-            console.log('=== SIMPLE DECOMPRESS COMPLETE ===');
-
+        
             return decompressed;
         }
 
@@ -1063,33 +1043,21 @@
 
         function decodeSDP(encodedStr) {
             try {
-                console.log('=== DECODING SDP ===');
-                console.log('Input encoded string:', encodedStr);
-                console.log('Input length:', encodedStr.length);
-
+                
                 // Restore base64url to base64
                 const base64 = encodedStr
                     .replace(/-/g, '+')
                     .replace(/_/g, '/');
-                console.log('Base64 string:', base64);
-
                 // Add padding if needed
                 const padding = base64.length % 4;
                 const paddedBase64 = padding ? base64 + '='.repeat(4 - padding) : base64;
-                console.log('Padded base64:', paddedBase64);
-
+                
                 const decompressed = atob(paddedBase64);
-                console.log('Decompressed string length:', decompressed.length);
-                console.log('Decompressed string preview:', decompressed.substring(0, 200) + '...');
-
+                
                 const json = simpleDecompress(decompressed);
-                console.log('Final JSON length:', json.length);
-                console.log('Final JSON preview:', json.substring(0, 200) + '...');
-
+                
                 const result = JSON.parse(json);
-                console.log('Parsed result:', result);
-                console.log('=== DECODING COMPLETE ===');
-
+                
                 return result;
             } catch (error) {
                 console.error('Error decoding SDP:', error);
@@ -1590,7 +1558,6 @@
             async registerInlineServiceWorker() {
                 // Skip Service Worker registration for file:// protocol
                 if (window.location.protocol === 'file:') {
-                    console.log('Skipping Service Worker registration (file:// protocol not supported)');
                     return;
                 }
 
@@ -1609,11 +1576,9 @@
 
                             // Install event - cache essential files
                             self.addEventListener('install', (event) => {
-                                console.log('Service Worker installing...');
                                 event.waitUntil(
                                     caches.open(CACHE_NAME)
                                         .then(cache => {
-                                            console.log('Caching app shell files');
                                             return cache.addAll(CACHE_FILES);
                                         })
                                         .catch(error => {
@@ -1630,7 +1595,6 @@
                                         return Promise.all(
                                             cacheNames.map(cacheName => {
                                                 if (cacheName !== CACHE_NAME) {
-                                                    console.log('Deleting old cache:', cacheName);
                                                     return caches.delete(cacheName);
                                                 }
                                             })
@@ -1655,7 +1619,6 @@
                                             .then(response => {
                                                 // Return cached version if available
                                                 if (response) {
-                                                    console.log('Serving from cache:', event.request.url);
                                                     return response;
                                                 }
 
@@ -1775,7 +1738,6 @@
                             scope: './'
                         });
 
-                        console.log('Inline Service Worker registered');
 
                         // Set up communication with service worker
                         this.setupServiceWorkerCommunication(registration);
@@ -1847,11 +1809,9 @@
 
             // Disconnect functionality
             disconnectFromPeer() {
-                console.log('Disconnecting from peer...');
 
                 // Send disconnect message to peer before closing connection
                 if (this.dataChannel && this.dataChannel.readyState === 'open') {
-                    console.log('Sending disconnect message to peer...');
                     this.dataChannel.send(JSON.stringify({
                         type: 'disconnect',
                         timestamp: Date.now()
@@ -1892,23 +1852,19 @@
                 this.updateRoomStatus('Disconnected', 'info');
                 this.updatePeerStatus('disconnected');
 
-                console.log('Disconnected successfully');
             }
 
             // Handle when peer disconnects
             handlePeerDisconnect() {
-                console.log('Handling peer disconnection...');
 
                 // Since peer has disconnected, we should also disconnect to clean up properly
                 // Don't send another disconnect message to avoid infinite loop
                 this.forceDisconnect();
 
-                console.log('Peer disconnection handled - both users now disconnected');
             }
 
             // Force disconnect without sending message (used when peer disconnects)
             forceDisconnect() {
-                console.log('Force disconnecting due to peer disconnect...');
 
                 // Notify service worker of disconnection
                 this.notifyServiceWorkerConnectionUpdate(false);
@@ -1939,7 +1895,6 @@
                     alert('Your peer has disconnected. The connection has been closed.');
                 }, 100);
 
-                console.log('Force disconnected successfully');
             }
 
             // Update connection controls visibility and player names
@@ -1964,7 +1919,6 @@
                         const oName = this.getPlayerNameBySymbol('o') || 'Player O';
                         player1El.textContent = xName;
                         player2El.textContent = oName;
-                        console.log('Displaying names: X =', xName, 'O =', oName);
                     }
                 } else {
                     if (controlsEl) controlsEl.style.display = 'none';
@@ -1989,7 +1943,6 @@
                         const peerSymbol = this.myPlayerSymbol === 'x' ? 'o' : 'x';
                         const peerName = this.peerName || `Player ${peerSymbol.toUpperCase()}`;
                         lobbyPeerNameEl.textContent = peerName;
-                        console.log('Lobby display - Peer name:', peerName, 'Peer symbol:', peerSymbol);
                     }
                 } else {
                     // Hide connection status in lobby
@@ -2038,7 +1991,6 @@
             createRoom() {
                 // Check if we already have an active connection
                 if (this.peerConnection && this.dataChannel && this.dataChannel.readyState === 'open') {
-                    console.log('Reusing existing connection for new game');
                     this.currentMode = 'network';
                     this.isInitiator = true;
                     this.gameEngine.reset();
@@ -2046,7 +1998,6 @@
                     return;
                 }
 
-                console.log('Creating room - redirecting to manual handshake...');
                 this.currentMode = 'manual';
                 this.isInitiator = true;
 
@@ -2057,7 +2008,6 @@
             joinRoom() {
                 // Check if we already have an active connection
                 if (this.peerConnection && this.dataChannel && this.dataChannel.readyState === 'open') {
-                    console.log('Reusing existing connection for new game');
                     this.currentMode = 'network';
                     this.isInitiator = false;
                     this.gameEngine.reset();
@@ -2119,7 +2069,6 @@
             }
             
             async connectToRoom() {
-                console.log('Join room - redirecting to manual handshake...');
                 this.currentMode = 'manual';
                 this.isInitiator = false;
                 this.closeJoinModal();
@@ -2132,7 +2081,6 @@
             // WebRTC and signaling
             async connectToSignalingServer() {
                 try {
-                    console.log('Connecting to signaling server...');
 
                     // Notify service worker of connection attempt
                     this.notifyServiceWorkerConnectionAttempt();
@@ -2140,7 +2088,6 @@
                     this.signalingServer = new WebSocket('ws://localhost:8080');
                     
                     this.signalingServer.onopen = () => {
-                        console.log('Connected to signaling server');
                         if (this.isInitiator) {
                             // Create room on server
                             this.signalingServer.send(JSON.stringify({
@@ -2158,17 +2105,14 @@
                     
                     this.signalingServer.onmessage = (event) => {
                         const message = JSON.parse(event.data);
-                        console.log('Received signaling message:', message);
                         this.handleSignalingMessage(message);
                     };
                     
                     this.signalingServer.onerror = () => {
-                        console.log('Signaling server error');
                         this.handleSignalingError();
                     };
                     
                     this.signalingServer.onclose = () => {
-                        console.log('Signaling server disconnected');
                         this.handleSignalingError();
                     };
                     
@@ -2180,13 +2124,11 @@
                     }, 10000);
                     
                 } catch (error) {
-                    console.log('Signaling connection failed:', error);
                     this.handleSignalingError();
                 }
             }
             
             handleSignalingMessage(message) {
-                console.log('Handling signaling message:', message);
                 switch (message.t) {
                     case 'created':
                         this.updateRoomStatus('Room created on server. Waiting for peer...', 'waiting');
@@ -2213,7 +2155,6 @@
             
             async createPeerConnection() {
                 try {
-                    console.log('Creating peer connection...');
                     this.peerConnection = new RTCPeerConnection({
                         iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
                     });
@@ -2240,7 +2181,6 @@
                     }
                     
                 } catch (error) {
-                    console.log('Error creating peer connection:', error);
                     this.handleSignalingError();
                 }
             }
@@ -2280,19 +2220,12 @@
                     }
                     
                 } catch (error) {
-                    console.log('Error handling offer:', error);
                     this.handleSignalingError();
                 }
             }
             
             async handleAnswer(answer) {
-                try {
-                    console.log('=== HANDLING ANSWER ===');
-                    console.log('Answer object:', answer);
-                    console.log('Answer properties:', Object.keys(answer));
-                    console.log('Answer type:', answer.type);
-                    console.log('Answer SDP exists:', !!answer.sdp);
-                    
+                try { 
                     // Validate answer format
                     if (!answer || typeof answer !== 'object') {
                         console.error('Answer is not a valid object:', answer);
@@ -2312,12 +2245,10 @@
                     
                     // If no type is specified, assume it's an answer
                     if (!answer.type) {
-                        console.log('No type specified, assuming answer type');
                         answer.type = 'answer';
                     }
                     
                     await this.peerConnection.setRemoteDescription(answer);
-                    console.log('Remote description set successfully');
                 } catch (error) {
                     console.error('Error handling answer:', error);
                     throw error; // Re-throw to be caught by the calling function
@@ -2355,9 +2286,7 @@
                     if (this.peerConnection && this.peerConnection.localDescription && this.peerConnection.localDescription.type === 'offer') {
                         // We created the offer, so we're the host (X)
                         this.myPlayerSymbol = 'x';
-                        console.log('I am the host (created offer), playing as X');
-                        console.log('My name:', this.myName);
-
+                        
                         // Send our player name to the peer immediately
                         this.dataChannel.send(JSON.stringify({
                             type: 'player_info',
@@ -2367,9 +2296,7 @@
                     } else {
                         // We received the offer and created the answer, so we're the joiner (O)
                         this.myPlayerSymbol = 'o';
-                        console.log('I am the joiner (created answer), playing as O');
-                        console.log('My name:', this.myName);
-
+                        
                         // Send our player name to the peer immediately
                         this.dataChannel.send(JSON.stringify({
                             type: 'player_info',
@@ -2383,7 +2310,6 @@
                     this.showGame();
                     this.renderGameBoard();
 
-                    console.log('=== GAME VIEW SHOULD BE VISIBLE NOW ===');
                 };
                 
                 this.dataChannel.onerror = (error) => {
@@ -2395,28 +2321,22 @@
                 };
                 
                 this.dataChannel.onmessage = (event) => {
-                    console.log('Received message:', event.data);
 
                     try {
                         const message = JSON.parse(event.data);
 
                         // Handle player info exchange
                         if (message.type === 'player_info') {
-                            console.log('Received player info:', message);
-                            console.log('My symbol:', this.myPlayerSymbol);
-
+                            
                             // Store the peer's name (the one that doesn't match our symbol)
                             if (message.symbol !== this.myPlayerSymbol) {
                                 this.peerName = message.name;
-                                console.log('Set peer name to:', this.peerName);
                             } else {
                                 // This is our own name being echoed back, update if needed
                                 this.myName = message.name;
-                                console.log('Updated my name to:', this.myName);
                             }
 
                             // Update the display with received player names
-                            console.log('Updating connection controls with names - My name:', this.myName, 'Peer name:', this.peerName);
                             this.updateConnectionControls(true);
                             return;
                         }
@@ -2435,7 +2355,6 @@
 
                         // Handle disconnect signal
                         if (message.type === 'disconnect') {
-                            console.log('Peer has disconnected');
                             this.handlePeerDisconnect();
                             return;
                         }
@@ -2453,13 +2372,11 @@
                 };
                 
                 this.dataChannel.onclose = () => {
-                    console.log('Data channel closed');
                     this.updatePeerStatus('disconnected');
                 };
             }
             
             handleSignalingError() {
-                console.log('Signaling failed, suggesting manual handshake');
                 this.updateRoomStatus('Signaling server unavailable. Use manual handshake below.', 'error');
             }
             
@@ -2830,7 +2747,6 @@
             
             async generateOffer() {
                 try {
-                    console.log('=== GENERATING OFFER (SENDER SIDE) ===');
                     
                     // Create completely new peer connection
                     const pc = new RTCPeerConnection({
@@ -2852,7 +2768,6 @@
                     
                     // Create data channel
                     const dc = pc.createDataChannel('gameData');
-                    console.log('Data channel created:', dc.label);
                     
                     // Create offer and wait for ICE gathering
                     const offer = await pc.createOffer();
@@ -2873,7 +2788,6 @@
                         }),
                         new Promise((resolve) => setTimeout(resolve, 3000)) // 3 second timeout
                     ]);
-                    console.log('Offer ICE gathering state:', pc.iceGatheringState);
                     
                     // Only assign to instance variables after successful creation
                     this.peerConnection = pc;
@@ -2884,7 +2798,6 @@
                     const completeOffer = pc.localDescription;
                     const encodedOffer = encodeSDP(completeOffer);
                     document.getElementById('offerText').value = encodedOffer;
-                    console.log('Complete offer generated and encoded with ICE candidates');
                     
                     // Hide loader
                     this.hideLoaders();
@@ -2907,12 +2820,9 @@
                 this.showLoader('answerLoader');
                 
                 try {
-                    console.log('=== PROCESSING OFFER (RECEIVER SIDE) ===');
-                    console.log('Raw offer text to decode:', offerText);
 
                     // Decode the compressed offer
                     const decodedOffer = decodeSDP(offerText);
-                    console.log('Decoded offer:', decodedOffer);
 
                     if (!decodedOffer) {
                         console.error('decodeSDP returned null/undefined');
@@ -2920,8 +2830,6 @@
                     }
 
                     const offer = decodedOffer;
-                    console.log('Offer type:', offer.type);
-                    console.log('Offer has SDP:', !!offer.sdp);
 
                     if (offer.type !== 'offer' || !offer.sdp) {
                         console.error('Offer validation failed:', {
@@ -2949,20 +2857,16 @@
                             { urls: 'stun:stun1.l.google.com:19302' }
                         ]
                     });
-                    console.log('Peer connection created on receiver side');
                     
                     // Set up connection state monitoring
                     this.peerConnection.onconnectionstatechange = () => {
-                        console.log('Receiver connection state:', this.peerConnection.connectionState);
                     };
                     
                     await this.peerConnection.setRemoteDescription(offer);
-                    console.log('Remote description set');
                     
                     // Create answer
                     const answer = await this.peerConnection.createAnswer();
                     await this.peerConnection.setLocalDescription(answer);
-                    console.log('Answer created and local description set');
                     
                     // Wait for ICE gathering to complete (with timeout)
                     await Promise.race([
@@ -2979,26 +2883,18 @@
                         }),
                         new Promise((resolve) => setTimeout(resolve, 3000)) // 3 second timeout
                     ]);
-                    console.log('ICE gathering state:', this.peerConnection.iceGatheringState);
                     
                     // Display the complete answer with ICE candidates (encoded for shorter strings)
                     const completeAnswer = this.peerConnection.localDescription;
-                    console.log('Generated complete answer object:', completeAnswer);
-                    console.log('Answer type:', completeAnswer.type);
-                    console.log('Answer SDP exists:', !!completeAnswer.sdp);
                     const encodedAnswer = encodeSDP(completeAnswer);
                     document.getElementById('answerText').value = encodedAnswer;
                     document.getElementById('generatedAnswerSection').classList.remove('hidden');
                     
                     // Set up data channel handling for receiver
                     this.peerConnection.ondatachannel = (event) => {
-                        console.log('=== DATA CHANNEL RECEIVED ON RECEIVER ===');
-                        console.log('Channel label:', event.channel.label);
-                        console.log('Channel state:', event.channel.readyState);
                         this.setupDataChannel(event.channel);
                     };
                     
-                    console.log('Answer generated - waiting for sender to process it');
                     
                     // Hide loader
                     this.hideLoaders();
@@ -3018,18 +2914,12 @@
                 }
                 
                 try {
-                    console.log('=== PROCESSING ANSWER (SENDER SIDE) ===');
-                    console.log('Raw encoded answer text:', answerText);
                     // Decode the compressed answer
                     const decodedAnswer = decodeSDP(answerText);
                     if (!decodedAnswer) {
                         throw new Error('Failed to decode answer - invalid format');
                     }
                     const answer = decodedAnswer;
-                    console.log('Decoded answer object:', answer);
-                    console.log('Answer properties:', Object.keys(answer));
-                    console.log('Answer type:', answer.type);
-                    console.log('Answer SDP exists:', !!answer.sdp);
                     
                     // More lenient validation - just check for essential properties
                     if (!answer || typeof answer !== 'object') {
@@ -3050,7 +2940,6 @@
                     
                     // If no type is specified, assume it's an answer
                     if (!answer.type) {
-                        console.log('No type specified, assuming answer type');
                         answer.type = 'answer';
                     }
                     
@@ -3060,11 +2949,8 @@
                     }
                     
                     await this.peerConnection.setRemoteDescription(answer);
-                    console.log('Remote description set on sender side');
-                    console.log('Data channel state:', this.dataChannel.readyState);
                     
                     // Connection will be established via data channel onopen event
-                    console.log('Waiting for data channel to open...');
                     
                 } catch (error) {
                     console.error('Error processing answer:', error);
@@ -3093,11 +2979,8 @@
         
         // Initialize app when DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('DOM loaded, initializing app...');
             try {
                 appState = new AppState();
-                console.log('AppState initialized successfully:', appState);
-                console.log('AppState methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(appState)));
             } catch (error) {
                 console.error('Failed to initialize AppState:', error);
                 alert('Failed to initialize app: ' + error.message);
@@ -3106,11 +2989,7 @@
         
         // Global functions for button clicks (memory optimization: avoid multiple event listeners)
         function createRoom() { 
-            console.log('Create room button clicked');
-            console.log('appState exists:', !!appState);
-            console.log('appState type:', typeof appState);
             if (appState) {
-                console.log('Calling appState.createRoom()');
                 appState.createRoom(); 
             } else {
                 console.error('appState is not initialized!');
@@ -3118,112 +2997,83 @@
             }
         }
         function joinRoom() { 
-            console.log('Join room button clicked');
             if (appState) appState.joinRoom(); 
         }
         function playVsAI() { 
-            console.log('Play vs AI button clicked');
             if (appState) appState.playVsAI(); 
         }
         function playHotseat() { 
-            console.log('Hotseat button clicked');
             if (appState) appState.playHotseat(); 
         }
         function backToLobby() { 
-            console.log('Back to lobby button clicked');
             if (appState) appState.backToLobby(); 
         }
         function closeJoinModal() { 
-            console.log('Close join modal button clicked');
             if (appState) appState.closeJoinModal(); 
         }
         function connectToRoom() { 
-            console.log('Connect to room button clicked');
             if (appState) appState.connectToRoom(); 
         }
         function startManualHandshake() { 
-            console.log('Start manual handshake button clicked');
             if (appState) appState.startManualHandshake(); 
         }
         function closeHandshakeModal() { 
-            console.log('Close handshake modal button clicked');
             if (appState) appState.closeHandshakeModal(); 
         }
         function processManualAnswer() { 
-            console.log('Process manual answer button clicked');
             if (appState) appState.processManualAnswer(); 
         }
         function openManualJoin() {
-            console.log('Open manual join button clicked');
             if (appState) appState.openManualJoin();
         }
         function processReceivedOffer() {
-            console.log('Process received offer button clicked');
             if (appState) appState.processReceivedOffer();
         }
         function startCreateMode() {
-            console.log('Start create mode button clicked');
             if (appState) appState.startCreateMode();
         }
         function startJoinMode() {
-            console.log('Start join mode button clicked');
             if (appState) appState.startJoinMode();
         }
         function processReceivedAnswer() {
-            console.log('Process received answer button clicked');
             if (appState) appState.processReceivedAnswer();
         }
         function resetHandshakeModal() {
-            console.log('Reset handshake modal button clicked');
             if (appState) appState.resetHandshakeModal();
         }
         function copyToClipboard(elementId) {
-            console.log('Copy to clipboard button clicked');
             if (appState) appState.copyToClipboard(elementId);
         }
         
         function rematchGame() {
-            console.log('Rematch button clicked');
             if (appState) appState.rematchGame();
         }
         
         function selectGame(gameType) {
-            console.log('Game selected:', gameType);
             if (appState) appState.selectGame(gameType);
         }
         
         function backToGameSelection() {
-            console.log('Back to game selection');
             if (appState) appState.backToGameSelection();
         }
         
         
         function makeNumGuess() {
-            console.log('Number guess made');
             if (appState) appState.makeNumGuess();
         }
         
         // Debug test function
         function testCreateRoom() {
-            console.log('=== DEBUG TEST START ===');
-            console.log('Testing create room functionality...');
             
             // Check if appState exists
-            console.log('appState exists:', !!appState);
             if (appState) {
-                console.log('appState type:', typeof appState);
-                console.log('appState methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(appState)));
                 
                 // Check DOM elements
                 const lobbyEl = document.getElementById('lobby');
                 const roomInfoEl = document.getElementById('roomInfo');
                 const roomIdEl = document.getElementById('roomId');
                 
-                console.log('DOM elements:', {
-                    lobby: lobbyEl,
-                    roomInfo: roomInfoEl,
-                    roomId: roomIdEl
-                });
+                
                 
                 // Test the createRoom method directly
                 try {
@@ -3231,15 +3081,11 @@
                 } catch (error) {
                     console.error('Error calling createRoom:', error);
                 }
-            } else {
-                console.error('appState is null or undefined!');
             }
-            console.log('=== DEBUG TEST END ===');
         }
         
         // Test SDP encoding/decoding functionality
         function testSDPEncoding() {
-            console.log('=== TESTING PURE JS SDP ENCODING/DECODING ===');
 
             // Test data - simulate a WebRTC offer/answer
             const testSDP = {
@@ -3247,40 +3093,22 @@
                 sdp: 'v=0\r\no=- 123456789 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=group:BUNDLE data\r\na=msid-semantic: WMS\r\nm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\nc=IN IP4 127.0.0.1\r\na=candidate:1 1 UDP 2122260223 192.168.1.1 12345 typ host generation 0\r\na=candidate:2 1 UDP 2122194687 10.0.0.1 12346 typ host generation 0\r\na=ice-ufrag:abcd\r\na=ice-pwd:efgh\r\na=fingerprint:sha-256 12:34:56:78:9A:BC:DE:F0:12:34:56:78:9A:BC:DE:F0:12:34:56:78:9A:BC:DE:F0\r\na=setup:actpass\r\na=mid:data\r\na=sctp-port:5000\r\na=max-message-size:262144'
             };
 
-            console.log('Original SDP object:', testSDP);
             const originalJSON = JSON.stringify(testSDP);
-            console.log('Original JSON length:', originalJSON.length);
-            console.log('Line breaks in original:', (originalJSON.match(/\r\n/g) || []).length);
-
+            
             // Test compression separately
             const compressed = simpleCompress(originalJSON);
-            console.log('Compressed length:', compressed.length);
-            console.log('Compression ratio:', (originalJSON.length / compressed.length).toFixed(2) + 'x');
-            console.log('Line breaks in compressed:', (compressed.match(/\|/g) || []).length);
-
+           
             // Test encoding
             const encoded = encodeSDP(testSDP);
-            console.log('Encoded string:', encoded);
-            console.log('Encoded length:', encoded.length);
-
+           
             // Test decoding
             const decoded = decodeSDP(encoded);
-            console.log('Decoded object:', decoded);
 
             // Test round-trip integrity
             const isEqual = JSON.stringify(testSDP) === JSON.stringify(decoded);
-            console.log('Round-trip successful:', isEqual);
 
             if (isEqual) {
-                console.log('✅ Pure JS SDP encoding/decoding test PASSED');
                 const finalCompressionRatio = (originalJSON.length / encoded.length).toFixed(2);
-                console.log('Final compression ratio (JSON → Encoded):', finalCompressionRatio + 'x');
-                console.log('Space saved:', ((1 - encoded.length / originalJSON.length) * 100).toFixed(1) + '%');
-            } else {
-                console.log('❌ Pure JS SDP encoding/decoding test FAILED');
-                console.log('Differences:');
-                console.log('Original SDP:', JSON.stringify(testSDP, null, 2));
-                console.log('Decoded SDP:', JSON.stringify(decoded, null, 2));
             }
 
             console.log('=== PURE JS TEST COMPLETE ===');
@@ -3307,21 +3135,7 @@
             }
         }
 
-        // Single file integrity check
-        function verifySingleFileIntegrity() {
-            console.log('=== SINGLE FILE INTEGRITY CHECK ===');
-            console.log('✅ Application consolidated into single HTML file');
-            console.log('✅ Service Worker embedded inline');
-            console.log('✅ All functionality preserved');
-            console.log('✅ Ready for standalone deployment');
-            console.log('=== INTEGRITY CHECK COMPLETE ===');
-        }
-
-        // Auto-run integrity check on load
-        document.addEventListener('DOMContentLoaded', () => {
-            // Small delay to ensure everything is loaded
-            setTimeout(verifySingleFileIntegrity, 1000);
-        });
+        
     </script>
 </body>
 </html>
