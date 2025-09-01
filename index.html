@@ -323,11 +323,12 @@
             cursor: not-allowed;
             opacity: 0.6;
         }
-        
+
         .connect4-cell:not(.non-clickable):hover {
             background: var(--surface-secondary);
             transform: scale(1.1);
             border-color: var(--primary-color);
+            cursor: pointer;
         }
         
         .connect4-cell.red { 
@@ -995,16 +996,6 @@
                 </div>
             </div>
         </div>
-        
-        <!-- Debug Panel -->
-        <div class="debug-panel">
-            <h3>🔧 Debug Info</h3>
-            <div class="debug-item">Memory: <strong id="memoryUsage">--</strong></div>
-            <div class="debug-item">Online: <strong id="onlineStatus">--</strong></div>
-            <div class="debug-item">Peer: <strong id="peerStatus">--</strong></div>
-            <div class="debug-item">Game State: <strong id="gameState">--</strong></div>
-            <button onclick="exportMemorySnapshot()" style="background: #333; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; margin-top: 10px; cursor: pointer; font-size: 0.8rem;">Export Memory Snapshot</button>
-        </div>
 
     <script>
         // Pure JavaScript SDP Encoding/Decoding utilities for shorter strings
@@ -1370,7 +1361,14 @@
             }
             
             canDropConnect4(board, col) {
-                return board[col] === '';
+                // Check from bottom row (row 5) up to find first empty spot
+                for (let row = 5; row >= 0; row--) {
+                    const index = row * 7 + col;
+                    if (board[index] === '') {
+                        return true;
+                    }
+                }
+                return false; // Column is full
             }
             
             dropConnect4Piece(board, col, player) {
@@ -1395,31 +1393,99 @@
                 return -1;
             }
             
-            checkConnect4WinForBoard(board, index) {
-                const row = Math.floor(index / 7);
-                const col = index % 7;
-                const player = board[index];
-                
+            checkConnect4WinForBoard(board, lastMoveIndex) {
+                const row = Math.floor(lastMoveIndex / 7);
+                const col = lastMoveIndex % 7;
+                const player = board[lastMoveIndex];
+
+                // Check horizontal (left and right from current position)
                 let count = 1;
-                for (let c = col - 1; c >= 0 && board[row * 7 + c] === player; c--) count++;
-                for (let c = col + 1; c < 7 && board[row * 7 + c] === player; c++) count++;
+                // Check left
+                for (let c = col - 1; c >= 0; c--) {
+                    const index = row * 7 + c;
+                    if (board[index] === player) {
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
+                // Check right
+                for (let c = col + 1; c < 7; c++) {
+                    const index = row * 7 + c;
+                    if (board[index] === player) {
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
                 if (count >= 4) return true;
-                
+
+                // Check vertical (up and down from current position)
                 count = 1;
-                for (let r = row - 1; r >= 0 && board[r * 7 + col] === player; r--) count++;
-                for (let r = row + 1; r < 6 && board[r * 7 + col] === player; r++) count++;
+                // Check up
+                for (let r = row - 1; r >= 0; r--) {
+                    const index = r * 7 + col;
+                    if (board[index] === player) {
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
+                // Check down
+                for (let r = row + 1; r < 6; r++) {
+                    const index = r * 7 + col;
+                    if (board[index] === player) {
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
                 if (count >= 4) return true;
-                
+
+                // Check diagonal (top-left to bottom-right)
                 count = 1;
-                for (let r = row - 1, c = col - 1; r >= 0 && c >= 0 && board[r * 7 + c] === player; r--, c--) count++;
-                for (let r = row + 1, c = col + 1; r < 6 && c < 7 && board[r * 7 + c] === player; r++, c++) count++;
+                // Check top-left
+                for (let r = row - 1, c = col - 1; r >= 0 && c >= 0; r--, c--) {
+                    const index = r * 7 + c;
+                    if (board[index] === player) {
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
+                // Check bottom-right
+                for (let r = row + 1, c = col + 1; r < 6 && c < 7; r++, c++) {
+                    const index = r * 7 + c;
+                    if (board[index] === player) {
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
                 if (count >= 4) return true;
-                
+
+                // Check diagonal (top-right to bottom-left)
                 count = 1;
-                for (let r = row - 1, c = col + 1; r >= 0 && c < 7 && board[r * 7 + c] === player; r--, c++) count++;
-                for (let r = row + 1, c = col - 1; r < 6 && c >= 0 && board[r * 7 + c] === player; r++, c--) count++;
+                // Check top-right
+                for (let r = row - 1, c = col + 1; r >= 0 && c < 7; r--, c++) {
+                    const index = r * 7 + c;
+                    if (board[index] === player) {
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
+                // Check bottom-left
+                for (let r = row + 1, c = col - 1; r < 6 && c >= 0; r++, c--) {
+                    const index = r * 7 + c;
+                    if (board[index] === player) {
+                        count++;
+                    } else {
+                        break;
+                    }
+                }
                 if (count >= 4) return true;
-                
+
                 return false;
             }
             
@@ -1501,10 +1567,11 @@
                         this.handleCellClick(index);
                     } else if (e.target.classList.contains('connect4-cell')) {
                         const index = parseInt(e.target.dataset.index);
-                        // For Connect 4, only allow clicks on top row cells (indices 0-6)
-                        // and only if the column is not full
-                        if (index >= 0 && index <= 6) {
-                            const col = index;
+                        const col = parseInt(e.target.dataset.col);
+
+                        // For Connect 4, allow clicks on any clickable cell in a droppable column
+                        // The rendering logic ensures only valid cells are clickable
+                        if (!e.target.classList.contains('non-clickable')) {
                             const canDrop = this.gameEngine.canDropConnect4(this.gameEngine.board, col);
                             if (canDrop) {
                                 this.handleCellClick(index);
@@ -1857,10 +1924,52 @@
             // Handle when peer disconnects
             handlePeerDisconnect() {
 
+                // Show disconnection message to user
+                this.showPeerDisconnectedMessage();
+
                 // Since peer has disconnected, we should also disconnect to clean up properly
                 // Don't send another disconnect message to avoid infinite loop
-                this.forceDisconnect();
+                setTimeout(() => {
+                    this.forceDisconnect();
+                }, 3000); // Give user time to see the message
 
+            }
+
+            // Show message when peer disconnects
+            showPeerDisconnectedMessage() {
+                // Create a modal overlay for the disconnection message
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay active';
+                modal.style.zIndex = '2000';
+                modal.innerHTML = `
+                    <div class="modal-content" style="max-width: 400px;">
+                        <div class="modal-header">
+                            <h3 style="color: var(--danger-color);">🔌 Connection Lost</h3>
+                        </div>
+                        <div class="modal-body" style="text-align: center;">
+                            <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">
+                                Your peer has disconnected from the game.
+                            </p>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">
+                                You will be redirected to the home page in a few seconds...
+                            </p>
+                            <div style="margin-top: 1.5rem;">
+                                <button class="btn" onclick="this.closest('.modal-overlay').remove(); appState.forceDisconnect();" style="background: var(--primary-color);">
+                                    Go to Home Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+
+                // Auto-remove after 3 seconds and redirect
+                setTimeout(() => {
+                    if (modal.parentNode) {
+                        modal.remove();
+                    }
+                }, 3000);
             }
 
             // Force disconnect without sending message (used when peer disconnects)
@@ -1954,6 +2063,24 @@
             selectGame(gameType) {
                 this.selectedGame = gameType;
                 this.gameEngine.setGameType(gameType);
+
+                // If we have an active P2P connection, start the game directly
+                if (this.peerConnection && this.dataChannel && this.dataChannel.readyState === 'open') {
+                    this.currentMode = 'network';
+                    this.gameEngine.reset();
+
+                    // Notify the peer to start the same game
+                    this.dataChannel.send(JSON.stringify({
+                        type: 'game_selected',
+                        gameType: gameType,
+                        timestamp: Date.now()
+                    }));
+
+                    this.showGame();
+                    return;
+                }
+
+                // Otherwise, show the game mode selection (Create Room/Join Room/etc)
                 this.showGameModeSelection();
             }
             
@@ -1977,6 +2104,14 @@
 
                 // Don't cleanup connection - keep it persistent for multiple games
                 // this.cleanupConnection(); // Commented out to maintain persistent connection
+
+                // Notify peer to go back to game selection
+                if (this.peerConnection && this.dataChannel && this.dataChannel.readyState === 'open') {
+                    this.dataChannel.send(JSON.stringify({
+                        type: 'back_to_games',
+                        timestamp: Date.now()
+                    }));
+                }
 
                 document.getElementById('game').classList.add('hidden');
                 document.getElementById('gameMode').classList.add('hidden');
@@ -2033,8 +2168,11 @@
             
             
             showGame() {
+                // Ensure proper UI state transition
+                document.getElementById('lobby').classList.add('hidden');
                 document.getElementById('gameMode').classList.add('hidden');
                 document.getElementById('game').classList.remove('hidden');
+
                 this.renderGameBoard();
                 this.updateGameStatus();
 
@@ -2358,6 +2496,27 @@
                             this.handlePeerDisconnect();
                             return;
                         }
+
+                        // Handle game selection from peer
+                        if (message.type === 'game_selected') {
+                            this.selectedGame = message.gameType;
+                            this.gameEngine.setGameType(message.gameType);
+                            this.currentMode = 'network';
+                            this.gameEngine.reset();
+                            this.showGame();
+                            return;
+                        }
+
+                        // Handle peer going back to game selection
+                        if (message.type === 'back_to_games') {
+                            this.currentMode = 'lobby';
+                            this.gameEngine.reset();
+                            document.getElementById('game').classList.add('hidden');
+                            document.getElementById('gameMode').classList.add('hidden');
+                            document.getElementById('lobby').classList.remove('hidden');
+                            this.updateConnectionControls(this.currentMode === 'network');
+                            return;
+                        }
                     } catch (e) {
                         // Not a JSON message, handle as legacy format
                     }
@@ -2372,7 +2531,14 @@
                 };
                 
                 this.dataChannel.onclose = () => {
+                    console.log('Data channel closed - peer disconnected');
                     this.updatePeerStatus('disconnected');
+                    // Don't call handlePeerDisconnect here as it might be called from connection state change
+                    if (this.peerConnection && this.peerConnection.connectionState !== 'disconnected' &&
+                        this.peerConnection.connectionState !== 'failed' &&
+                        this.peerConnection.connectionState !== 'closed') {
+                        this.handlePeerDisconnect();
+                    }
                 };
             }
             
@@ -2510,14 +2676,33 @@
                     cell.dataset.index = i;
                     cell.dataset.col = i % 7;
 
-                    // Only top row cells (0-6) can be clicked, and only if column is not full
-                    if (i > 6) {
+                    const row = Math.floor(i / 7);
+                    const col = i % 7;
+
+                    // Only allow clicking on cells that can actually receive pieces
+                    // For Connect 4, pieces fall to the bottom, so only the bottom-most empty cell in each droppable column is clickable
+                    if (this.gameEngine.board[i] !== '') {
+                        // Cell is already occupied
                         cell.classList.add('non-clickable');
                     } else {
-                        // Check if column is full
-                        const col = i % 7;
-                        if (!this.gameEngine.canDropConnect4(this.gameEngine.board, col)) {
+                        // Cell is empty - check if column is droppable and if this is the bottom-most empty cell
+                        if (!this.gameEngine.canDropConnect4([...this.gameEngine.board], col)) {
+                            // Column is full
                             cell.classList.add('non-clickable');
+                        } else {
+                            // Column is droppable - check if this is the cell that will receive the piece
+                            // (the bottom-most empty cell in the column)
+                            let isBottomMostEmpty = true;
+                            for (let r = row + 1; r < 6; r++) {
+                                const belowIndex = r * 7 + col;
+                                if (this.gameEngine.board[belowIndex] === '') {
+                                    isBottomMostEmpty = false;
+                                    break;
+                                }
+                            }
+                            if (!isBottomMostEmpty) {
+                                cell.classList.add('non-clickable');
+                            }
                         }
                     }
 
@@ -2547,8 +2732,10 @@
             // Game-specific move handlers
             handleCellClick(index) {
                 let moveData;
-                
+
                 if (this.selectedGame === 'connect4') {
+                    // For Connect 4, we always pass the column number as moveData
+                    // regardless of which row the player clicked on
                     const col = index % 7;
                     moveData = col;
                 } else {
@@ -2764,6 +2951,12 @@
                     
                     pc.onconnectionstatechange = () => {
                         console.log('Connection state changed:', pc.connectionState);
+                        if (pc.connectionState === 'disconnected' ||
+                            pc.connectionState === 'failed' ||
+                            pc.connectionState === 'closed') {
+                            console.log('Peer connection lost in offer generation');
+                            this.handlePeerDisconnect();
+                        }
                     };
                     
                     // Create data channel
@@ -2860,6 +3053,13 @@
                     
                     // Set up connection state monitoring
                     this.peerConnection.onconnectionstatechange = () => {
+                        console.log('Connection state changed:', this.peerConnection.connectionState);
+                        if (this.peerConnection.connectionState === 'disconnected' ||
+                            this.peerConnection.connectionState === 'failed' ||
+                            this.peerConnection.connectionState === 'closed') {
+                            console.log('Peer connection lost in answer processing');
+                            this.handlePeerDisconnect();
+                        }
                     };
                     
                     await this.peerConnection.setRemoteDescription(offer);
