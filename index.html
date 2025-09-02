@@ -875,13 +875,19 @@
                 <button class="btn game-btn" onclick="selectGame('connect4')">🔴 Connect Four</button>
                 <button class="btn game-btn" onclick="selectGame('numguess')">🔢 Number Guessing</button>
             </div>
+
+            <div class="room-selection" style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                <h3 style="margin-bottom: 1rem; color: var(--text-secondary);">Or Connect with Friends</h3>
+                <div style="display: flex; flex-direction: column; gap: 1rem; max-width: 300px; margin: 0 auto;">
+                    <button class="btn" onclick="createRoom()">🔗 Create Room</button>
+                    <button class="btn" onclick="joinRoom()">📋 Join Room</button>
+                </div>
+            </div>
         </div>
         
         <!-- Game Mode Selection -->
         <div id="gameMode" class="lobby hidden">
             <h2 id="selectedGameTitle">Game Selected</h2>
-            <button class="btn" onclick="createRoom()">Create Room</button>
-            <button class="btn" onclick="joinRoom()">Join Room</button>
             <button class="btn offline" onclick="playVsAI()">Play vs AI</button>
             <button class="btn offline" onclick="playHotseat()">Hotseat (Offline)</button>
             <button class="btn back-btn" onclick="backToGameSelection()">Back to Games</button>
@@ -1034,26 +1040,36 @@
 
         function decodeSDP(encodedStr) {
             try {
+                console.log('Decoding SDP, input length:', encodedStr.length);
+                console.log('Input starts with:', encodedStr.substring(0, 50));
                 
                 // Restore base64url to base64
                 const base64 = encodedStr
                     .replace(/-/g, '+')
                     .replace(/_/g, '/');
+                console.log('Base64 conversion done, length:', base64.length);
+                
                 // Add padding if needed
                 const padding = base64.length % 4;
                 const paddedBase64 = padding ? base64 + '='.repeat(4 - padding) : base64;
+                console.log('Padding added, final length:', paddedBase64.length);
                 
                 const decompressed = atob(paddedBase64);
+                console.log('Base64 decoded, length:', decompressed.length);
                 
                 const json = simpleDecompress(decompressed);
+                console.log('Decompressed, length:', json.length);
+                console.log('JSON starts with:', json.substring(0, 100));
                 
                 const result = JSON.parse(json);
+                console.log('Successfully parsed JSON, type:', result.type);
                 
                 return result;
             } catch (error) {
                 console.error('Error decoding SDP:', error);
                 console.error('Error details:', error.message);
                 console.error('Error stack:', error.stack);
+                console.error('Input string:', encodedStr);
                 return null;
             }
         }
@@ -2043,6 +2059,7 @@
             updateLobbyConnectionStatus() {
                 const lobbyStatusEl = document.getElementById('lobbyConnectionStatus');
                 const lobbyPeerNameEl = document.getElementById('lobbyPeerName');
+                const roomSelectionEl = document.querySelector('.room-selection');
 
                 if (this.peerConnection && this.dataChannel && this.dataChannel.readyState === 'open') {
                     // Show connection status in lobby
@@ -2053,9 +2070,13 @@
                         const peerName = this.peerName || `Player ${peerSymbol.toUpperCase()}`;
                         lobbyPeerNameEl.textContent = peerName;
                     }
+                    // Hide room creation buttons since we're already connected
+                    if (roomSelectionEl) roomSelectionEl.style.display = 'none';
                 } else {
                     // Hide connection status in lobby
                     if (lobbyStatusEl) lobbyStatusEl.classList.add('hidden');
+                    // Show room creation buttons since we're not connected
+                    if (roomSelectionEl) roomSelectionEl.style.display = 'block';
                 }
             }
             
@@ -2402,10 +2423,15 @@
             setupDataChannel(channel) {
                 this.dataChannel = channel;
                 console.log('Setting up data channel, current state:', channel.readyState);
+                console.log('Data channel label:', channel.label);
+                console.log('Data channel id:', channel.id);
                 
-                                this.dataChannel.onopen = () => {
+                this.dataChannel.onopen = () => {
                     console.log('=== DATA CHANNEL OPENED ===');
                     console.log('Channel state:', this.dataChannel.readyState);
+                    console.log('Channel label:', this.dataChannel.label);
+                    console.log('Channel id:', this.dataChannel.id);
+                    
                     this.updatePeerStatus('connected');
 
                     // Notify service worker of connection
@@ -2424,7 +2450,8 @@
                     if (this.peerConnection && this.peerConnection.localDescription && this.peerConnection.localDescription.type === 'offer') {
                         // We created the offer, so we're the host (X)
                         this.myPlayerSymbol = 'x';
-                        
+                        console.log('I am the host (created offer), playing as X');
+
                         // Send our player name to the peer immediately
                         this.dataChannel.send(JSON.stringify({
                             type: 'player_info',
@@ -2434,7 +2461,8 @@
                     } else {
                         // We received the offer and created the answer, so we're the joiner (O)
                         this.myPlayerSymbol = 'o';
-                        
+                        console.log('I am the joiner (created answer), playing as O');
+
                         // Send our player name to the peer immediately
                         this.dataChannel.send(JSON.stringify({
                             type: 'player_info',
@@ -2447,7 +2475,11 @@
                     this.closeHandshakeModal();
                     this.showGame();
                     this.renderGameBoard();
-
+                    
+                    console.log('=== GAME VIEW SHOULD BE VISIBLE NOW ===');
+                    console.log('Current mode:', this.currentMode);
+                    console.log('My player symbol:', this.myPlayerSymbol);
+                    console.log('My name:', this.myName);
                 };
                 
                 this.dataChannel.onerror = (error) => {
@@ -2531,13 +2563,17 @@
                 };
                 
                 this.dataChannel.onclose = () => {
-                    console.log('Data channel closed - peer disconnected');
-                    this.updatePeerStatus('disconnected');
-                    // Don't call handlePeerDisconnect here as it might be called from connection state change
-                    if (this.peerConnection && this.peerConnection.connectionState !== 'disconnected' &&
-                        this.peerConnection.connectionState !== 'failed' &&
-                        this.peerConnection.connectionState !== 'closed') {
-                        this.handlePeerDisconnect();
+                    console.log('Data channel closed');
+                    // Only treat as peer disconnection if connection is actually established
+                    if (this.peerConnection) {
+                        if (this.peerConnection.connectionState === 'connected' ||
+                            this.peerConnection.iceConnectionState === 'connected') {
+                            console.log('Data channel closed while connection was active - peer disconnected');
+                            this.updatePeerStatus('disconnected');
+                            this.handlePeerDisconnect();
+                        } else {
+                            console.log('Data channel closed during connection setup - this is normal');
+                        }
                     }
                 };
             }
@@ -2550,6 +2586,25 @@
                 const statusEl = document.getElementById('peerStatus');
                 if (statusEl) {
                     statusEl.textContent = status;
+                }
+            }
+
+            updateRoomStatus(message, type = 'info') {
+                // Try to find an appropriate status element to update
+                let statusEl = document.getElementById('gameStatus');
+                if (!statusEl) {
+                    statusEl = document.getElementById('peerStatus');
+                }
+                if (!statusEl) {
+                    // If no status element found, try to create a temporary one or use console
+                    console.log('Room status:', message, type);
+                    return;
+                }
+
+                if (statusEl) {
+                    statusEl.textContent = message;
+                    // Update class based on type
+                    statusEl.className = `status ${type}`;
                 }
             }
             
@@ -2635,7 +2690,9 @@
                 if (this.gameEngine.gameType === 'numguess') {
                     scoreText = `Your Score: ${score.x} | Opponent Score: ${score.o}`;
                 } else {
-                    scoreText = `Player X: ${score.x} | Player O: ${score.o} | Draws: ${score.draws}`;
+                    const xName = this.getPlayerNameBySymbol('x') || 'Player X';
+                    const oName = this.getPlayerNameBySymbol('o') || 'Player O';
+                    scoreText = `${xName}: ${score.x} | ${oName}: ${score.o} | Draws: ${score.draws}`;
                 }
 
                 if (scoreDisplay) {
@@ -2836,7 +2893,8 @@
                         gameOverActionsEl.classList.remove('hidden');
                     }
                 } else {
-                    statusEl.textContent = `Player ${this.gameEngine.currentPlayer.toUpperCase()}'s turn`;
+                    const currentPlayerName = this.getPlayerNameBySymbol(this.gameEngine.currentPlayer) || `Player ${this.gameEngine.currentPlayer.toUpperCase()}`;
+                    statusEl.textContent = `${currentPlayerName}'s turn`;
                     statusEl.className = 'status';
                     
                     // Hide game over actions
@@ -2935,51 +2993,94 @@
             async generateOffer() {
                 try {
                     
-                    // Create completely new peer connection
+                    // Create completely new peer connection with multiple STUN servers
                     const pc = new RTCPeerConnection({
                         iceServers: [
                             { urls: 'stun:stun.l.google.com:19302' },
-                            { urls: 'stun:stun1.l.google.com:19302' }
-                        ]
+                            { urls: 'stun:stun1.l.google.com:19302' },
+                            { urls: 'stun:stun2.l.google.com:19302' },
+                            { urls: 'stun:stun3.l.google.com:19302' },
+                            { urls: 'stun:stun4.l.google.com:19302' }
+                        ],
+                        iceCandidatePoolSize: 10
                     });
                     
                     // Set up ICE candidate gathering
                     pc.onicecandidate = (event) => {
-                        console.log('ICE candidate generated:', event.candidate);
-                        // For manual handshake, we'll include candidates in the offer
+                        if (event.candidate) {
+                            console.log('ICE candidate generated:', event.candidate.type, event.candidate.candidate);
+                        } else {
+                            console.log('ICE candidate gathering complete');
+                        }
                     };
-                    
+
+                    // Add ICE connection state monitoring for better debugging
+                    pc.oniceconnectionstatechange = () => {
+                        console.log('ICE connection state:', pc.iceConnectionState);
+                    };
+
+                    // Add ICE gathering state monitoring
+                    pc.onicegatheringstatechange = () => {
+                        console.log('ICE gathering state:', pc.iceGatheringState);
+                    };
+
                     pc.onconnectionstatechange = () => {
                         console.log('Connection state changed:', pc.connectionState);
-                        if (pc.connectionState === 'disconnected' ||
-                            pc.connectionState === 'failed' ||
-                            pc.connectionState === 'closed') {
-                            console.log('Peer connection lost in offer generation');
-                            this.handlePeerDisconnect();
+                        console.log('ICE connection state:', pc.iceConnectionState);
+                        console.log('Signaling state:', pc.signalingState);
+                        
+                        // Only handle disconnection if we're connected and have a data channel
+                        if (this.dataChannel && this.dataChannel.readyState === 'open') {
+                            if (pc.connectionState === 'failed' ||
+                                (pc.connectionState === 'closed' && pc.iceConnectionState !== 'checking')) {
+                                console.log('Peer connection failed after being established');
+                                this.handlePeerDisconnect();
+                            }
+                            // For 'disconnected' state, wait a bit before declaring it a failure
+                            else if (pc.connectionState === 'disconnected') {
+                                console.log('Peer temporarily disconnected, waiting for reconnection...');
+                                setTimeout(() => {
+                                    if (pc && pc.connectionState === 'disconnected') {
+                                        console.log('Peer connection lost');
+                                        this.handlePeerDisconnect();
+                                    }
+                                }, 5000); // Wait 5 seconds before giving up
+                            }
                         }
                     };
                     
-                    // Create data channel
-                    const dc = pc.createDataChannel('gameData');
+                    // Create data channel with proper configuration
+                    const dc = pc.createDataChannel('gameData', {
+                        ordered: true,
+                        maxRetransmits: 3
+                    });
+                    console.log('Data channel created with label:', dc.label);
                     
                     // Create offer and wait for ICE gathering
                     const offer = await pc.createOffer();
                     await pc.setLocalDescription(offer);
                     
-                    // Wait for ICE gathering to complete (with timeout)
+                    // Wait for ICE gathering to complete (with longer timeout for better connectivity)
                     await Promise.race([
                         new Promise((resolve) => {
                             if (pc.iceGatheringState === 'complete') {
+                                console.log('ICE gathering already complete');
                                 resolve();
                             } else {
+                                console.log('Waiting for ICE gathering to complete...');
                                 pc.addEventListener('icegatheringstatechange', () => {
+                                    console.log('ICE gathering state changed to:', pc.iceGatheringState);
                                     if (pc.iceGatheringState === 'complete') {
+                                        console.log('ICE gathering completed');
                                         resolve();
                                     }
                                 });
                             }
                         }),
-                        new Promise((resolve) => setTimeout(resolve, 3000)) // 3 second timeout
+                        new Promise((resolve) => {
+                            console.log('ICE gathering timeout after 5 seconds');
+                            setTimeout(resolve, 5000); // Increased to 5 seconds for better connectivity
+                        })
                     ]);
                     
                     // Only assign to instance variables after successful creation
@@ -2989,7 +3090,16 @@
                     
                     // Display complete offer with ICE candidates (encoded for shorter strings)
                     const completeOffer = pc.localDescription;
+                    console.log('Complete offer object:', completeOffer);
+                    console.log('Offer type:', completeOffer.type);
+                    console.log('Offer SDP length:', completeOffer.sdp.length);
+                    
                     const encodedOffer = encodeSDP(completeOffer);
+                    if (!encodedOffer) {
+                        throw new Error('Failed to encode offer');
+                    }
+                    
+                    console.log('Encoded offer length:', encodedOffer.length);
                     document.getElementById('offerText').value = encodedOffer;
                     
                     // Hide loader
@@ -2997,7 +3107,22 @@
                     
                 } catch (error) {
                     console.error('Error generating offer:', error);
-                    alert('Failed to generate offer. Please try again.');
+                    console.error('Error details:', error.message);
+                    console.error('Error stack:', error.stack);
+
+                    // Provide more specific error messages
+                    let errorMessage = 'Failed to generate offer. ';
+                    if (error.message.includes('RTCPeerConnection')) {
+                        errorMessage += 'WebRTC is not supported or permissions are blocked.';
+                    } else if (error.message.includes('network') || error.message.includes('ICE')) {
+                        errorMessage += 'Network connectivity issue. Check your internet connection.';
+                    } else if (error.message.includes('permission') || error.message.includes('denied')) {
+                        errorMessage += 'Browser permissions are required for WebRTC. Please allow camera/microphone access.';
+                    } else {
+                        errorMessage += 'Please check your browser settings and try again.';
+                    }
+
+                    alert(errorMessage);
                     this.hideLoaders();
                 }
             }
@@ -3043,22 +3168,60 @@
                         this.dataChannel = null;
                     }
                     
-                    // Create fresh peer connection for receiver
+                    // Create fresh peer connection for receiver with multiple STUN servers
                     this.peerConnection = new RTCPeerConnection({
                         iceServers: [
                             { urls: 'stun:stun.l.google.com:19302' },
-                            { urls: 'stun:stun1.l.google.com:19302' }
-                        ]
+                            { urls: 'stun:stun1.l.google.com:19302' },
+                            { urls: 'stun:stun2.l.google.com:19302' },
+                            { urls: 'stun:stun3.l.google.com:19302' },
+                            { urls: 'stun:stun4.l.google.com:19302' }
+                        ],
+                        iceCandidatePoolSize: 10
                     });
+
+                    // Add ICE connection state monitoring for better debugging
+                    this.peerConnection.oniceconnectionstatechange = () => {
+                        console.log('ICE connection state:', this.peerConnection.iceConnectionState);
+                    };
+
+                    // Add ICE gathering state monitoring
+                    this.peerConnection.onicegatheringstatechange = () => {
+                        console.log('ICE gathering state:', this.peerConnection.iceGatheringState);
+                    };
+                    
+                    // Add ICE candidate handling
+                    this.peerConnection.onicecandidate = (event) => {
+                        if (event.candidate) {
+                            console.log('Answer ICE candidate generated:', event.candidate.type, event.candidate.candidate);
+                        } else {
+                            console.log('Answer ICE candidate gathering complete');
+                        }
+                    };
                     
                     // Set up connection state monitoring
                     this.peerConnection.onconnectionstatechange = () => {
                         console.log('Connection state changed:', this.peerConnection.connectionState);
-                        if (this.peerConnection.connectionState === 'disconnected' ||
-                            this.peerConnection.connectionState === 'failed' ||
-                            this.peerConnection.connectionState === 'closed') {
-                            console.log('Peer connection lost in answer processing');
-                            this.handlePeerDisconnect();
+                        console.log('ICE connection state:', this.peerConnection.iceConnectionState);
+                        console.log('Signaling state:', this.peerConnection.signalingState);
+                        
+                        // Only handle disconnection if we're connected and have a data channel
+                        if (this.dataChannel && this.dataChannel.readyState === 'open') {
+                            if (this.peerConnection.connectionState === 'failed' ||
+                                (this.peerConnection.connectionState === 'closed' && this.peerConnection.iceConnectionState !== 'checking')) {
+                                console.log('Peer connection failed after being established');
+                                this.handlePeerDisconnect();
+                            }
+                            // For 'disconnected' state, wait a bit before declaring it a failure
+                            else if (this.peerConnection.connectionState === 'disconnected') {
+                                console.log('Peer temporarily disconnected, waiting for reconnection...');
+                                setTimeout(() => {
+                                    if (this.peerConnection && this.peerConnection.connectionState === 'disconnected') {
+                                        console.log('Peer connection lost');
+                                        this.handlePeerDisconnect();
+                                    }
+                                }, 5000); // Wait 5 seconds before giving up
+                            }
                         }
                     };
                     
@@ -3068,20 +3231,27 @@
                     const answer = await this.peerConnection.createAnswer();
                     await this.peerConnection.setLocalDescription(answer);
                     
-                    // Wait for ICE gathering to complete (with timeout)
+                    // Wait for ICE gathering to complete (with longer timeout for better connectivity)
                     await Promise.race([
                         new Promise((resolve) => {
                             if (this.peerConnection.iceGatheringState === 'complete') {
+                                console.log('Answer ICE gathering already complete');
                                 resolve();
                             } else {
+                                console.log('Waiting for answer ICE gathering to complete...');
                                 this.peerConnection.addEventListener('icegatheringstatechange', () => {
+                                    console.log('Answer ICE gathering state changed to:', this.peerConnection.iceGatheringState);
                                     if (this.peerConnection.iceGatheringState === 'complete') {
+                                        console.log('Answer ICE gathering completed');
                                         resolve();
                                     }
                                 });
                             }
                         }),
-                        new Promise((resolve) => setTimeout(resolve, 3000)) // 3 second timeout
+                        new Promise((resolve) => {
+                            console.log('Answer ICE gathering timeout after 5 seconds');
+                            setTimeout(resolve, 5000); // Increased to 5 seconds for better connectivity
+                        })
                     ]);
                     
                     // Display the complete answer with ICE candidates (encoded for shorter strings)
@@ -3101,7 +3271,22 @@
                     
                 } catch (error) {
                     console.error('Error processing offer:', error);
-                    alert('Invalid offer format. Please check the offer you pasted.');
+                    console.error('Error details:', error.message);
+                    console.error('Error stack:', error.stack);
+
+                    // Provide more specific error messages
+                    let errorMessage = 'Failed to process offer. ';
+                    if (error.message.includes('decode')) {
+                        errorMessage += 'The offer appears to be corrupted or invalid.';
+                    } else if (error.message.includes('RTCPeerConnection')) {
+                        errorMessage += 'WebRTC is not supported or permissions are blocked.';
+                    } else if (error.message.includes('network') || error.message.includes('ICE')) {
+                        errorMessage += 'Network connectivity issue. Check your internet connection.';
+                    } else {
+                        errorMessage += 'Please check the offer format and try again.';
+                    }
+
+                    alert(errorMessage);
                     this.hideLoaders();
                 }
             }
@@ -3114,14 +3299,36 @@
                 }
                 
                 try {
-                    // Decode the compressed answer
-                    const decodedAnswer = decodeSDP(answerText);
-                    if (!decodedAnswer) {
-                        throw new Error('Failed to decode answer - invalid format');
-                    }
-                    const answer = decodedAnswer;
+                    console.log('=== PROCESSING ANSWER (SENDER SIDE) ===');
+                    console.log('Raw answer text length:', answerText.length);
                     
-                    // More lenient validation - just check for essential properties
+                    // Try to decode the compressed answer first
+                    let answer;
+                    try {
+                        const decodedAnswer = decodeSDP(answerText);
+                        if (!decodedAnswer) {
+                            throw new Error('Failed to decode answer');
+                        }
+                        answer = decodedAnswer;
+                        console.log('Successfully decoded compressed answer');
+                    } catch (decodeError) {
+                        console.log('Failed to decode compressed answer, trying raw JSON:', decodeError.message);
+                        // Fallback: try to parse as raw JSON
+                        try {
+                            answer = JSON.parse(answerText);
+                            console.log('Successfully parsed as raw JSON');
+                        } catch (jsonError) {
+                            console.error('Failed to parse as JSON:', jsonError.message);
+                            throw new Error('Answer format is neither valid encoded format nor JSON');
+                        }
+                    }
+                    
+                    console.log('Parsed answer object:', answer);
+                    console.log('Answer properties:', Object.keys(answer));
+                    console.log('Answer type:', answer.type);
+                    console.log('Answer SDP exists:', !!answer.sdp);
+                    
+                    // Validate answer format
                     if (!answer || typeof answer !== 'object') {
                         console.error('Answer is not a valid object:', answer);
                         throw new Error('Invalid answer format - not an object');
@@ -3140,6 +3347,7 @@
                     
                     // If no type is specified, assume it's an answer
                     if (!answer.type) {
+                        console.log('No type specified, assuming answer type');
                         answer.type = 'answer';
                     }
                     
@@ -3148,13 +3356,93 @@
                         return;
                     }
                     
+                    console.log('Setting remote description...');
+                    console.log('Peer connection state:', this.peerConnection.connectionState);
+                    console.log('ICE connection state:', this.peerConnection.iceConnectionState);
+                    console.log('Signaling state:', this.peerConnection.signalingState);
+                    
                     await this.peerConnection.setRemoteDescription(answer);
+                    console.log('Remote description set successfully');
+                    console.log('Data channel state:', this.dataChannel ? this.dataChannel.readyState : 'null');
+                    
+                    // Show success message
+                    const statusMessage = document.createElement('div');
+                    statusMessage.className = 'status connected';
+                    statusMessage.textContent = '✅ Answer processed! Establishing connection...';
+                    statusMessage.style.marginTop = '1rem';
+                    
+                    const answerInput = document.getElementById('answerInput');
+                    if (answerInput.parentNode) {
+                        answerInput.parentNode.insertBefore(statusMessage, answerInput.nextSibling);
+                        
+                        // Remove the message after 5 seconds
+                        setTimeout(() => {
+                            if (statusMessage.parentNode) {
+                                statusMessage.remove();
+                            }
+                        }, 5000);
+                    }
                     
                     // Connection will be established via data channel onopen event
+                    console.log('Waiting for data channel to open...');
+                    
+                    // Set up a timeout to detect if data channel never opens
+                    const connectionTimeout = setTimeout(() => {
+                        if (this.dataChannel && this.dataChannel.readyState !== 'open') {
+                            console.error('Data channel failed to open within 15 seconds');
+                            console.log('Final data channel state:', this.dataChannel.readyState);
+                            console.log('Final peer connection state:', this.peerConnection.connectionState);
+                            console.log('Final ICE connection state:', this.peerConnection.iceConnectionState);
+                            
+                            // Show error message to user
+                            const errorMessage = document.createElement('div');
+                            errorMessage.className = 'status error';
+                            errorMessage.textContent = '❌ Connection timeout. Please try again or check your network.';
+                            errorMessage.style.marginTop = '1rem';
+                            
+                            const answerInput = document.getElementById('answerInput');
+                            if (answerInput.parentNode) {
+                                answerInput.parentNode.insertBefore(errorMessage, answerInput.nextSibling);
+                            }
+                        }
+                    }, 15000); // 15 second timeout
+                    
+                    // Clear timeout if connection succeeds
+                    if (this.dataChannel) {
+                        const originalOnOpen = this.dataChannel.onopen;
+                        this.dataChannel.onopen = () => {
+                            clearTimeout(connectionTimeout);
+                            if (originalOnOpen) originalOnOpen();
+                        };
+                    }
+                    
+                    // Also set up timeout clearing for data channels that might be received later
+                    const originalSetupDataChannel = this.setupDataChannel.bind(this);
+                    this.setupDataChannel = (channel) => {
+                        clearTimeout(connectionTimeout);
+                        originalSetupDataChannel(channel);
+                    };
                     
                 } catch (error) {
                     console.error('Error processing answer:', error);
-                    alert('Invalid answer format. Please check the answer you pasted.');
+                    console.error('Error details:', error.message);
+                    console.error('Error stack:', error.stack);
+                    
+                    // Provide more specific error messages
+                    let errorMessage = 'Failed to process answer. ';
+                    if (error.message.includes('decode')) {
+                        errorMessage += 'The answer appears to be corrupted or invalid.';
+                    } else if (error.message.includes('JSON')) {
+                        errorMessage += 'The answer is not in valid JSON format.';
+                    } else if (error.message.includes('SDP')) {
+                        errorMessage += 'The answer is missing required SDP information.';
+                    } else if (error.message.includes('type')) {
+                        errorMessage += 'The answer type is incorrect.';
+                    } else {
+                        errorMessage += 'Please check the answer format and try again.';
+                    }
+                    
+                    alert(errorMessage);
                 }
             }
             
